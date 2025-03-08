@@ -4,7 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
 import 'auth_service.dart';
-import 'home_page.dart'; // Assuming you have a HomePage to navigate to after successful registration
+// import 'home_page.dart'; // Assuming you have a HomePage to navigate to after successful registration
+import 'main_page.dart'; // Assuming you have a HomePage to navigate to after successful registration
+
+
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -687,7 +690,7 @@ class _RegisterPageState extends State<RegisterPage> {
             if (!mounted) return;
             Navigator.pushReplacement(
               context, 
-              MaterialPageRoute(builder: (context) => HomePage()),
+              MaterialPageRoute(builder: (context) => MainPage()),
             );
           }
         } on FirebaseAuthException catch (e) {
@@ -734,7 +737,7 @@ class _RegisterPageState extends State<RegisterPage> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context, 
-          MaterialPageRoute(builder: (context) => const HomePage()),
+          MaterialPageRoute(builder: (context) => const MainPage()),
         );
       }
     } catch (e) {

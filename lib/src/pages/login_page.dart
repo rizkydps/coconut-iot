@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:login_ui_demo/src/pages/register_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_service.dart'; 
-import 'home_page.dart';
+import 'main_page.dart'; 
 
 
 class LoginPage extends StatefulWidget {
@@ -61,7 +61,7 @@ class _LoginPageState extends State<LoginPage> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomePage()), // Ganti dengan halaman tujuan
+          MaterialPageRoute(builder: (context) => const MainPage()), // Ganti dengan halaman tujuan
         );
       } else {
         setState(() {
@@ -86,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomePage()), // Ganti dengan halaman tujuan
+          MaterialPageRoute(builder: (context) => const MainPage()), // Ganti dengan halaman tujuan
         );
       }
     } catch (e) {

@@ -54,9 +54,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    
     return Scaffold(
+      extendBody: true,
       backgroundColor: const Color(0xFF1E1E2C),
       appBar: AppBar(
         backgroundColor: const Color(0xFF2A2D3E),
@@ -66,15 +65,13 @@ class _HomePageState extends State<HomePage> {
             Image.asset(
               'assets/coco.png', // Ensure you have this asset
               height: 40,
-              // If you don't have a logo asset, use an icon instead:
-              // Icon(Icons.eco, color: Colors.green, size: 40),
               errorBuilder: (context, error, stackTrace) {
                 return const Icon(Icons.eco, color: Colors.green, size: 40);
               },
             ),
             const SizedBox(width: 10),
             Text(
-              'COCONUT',
+              'COCONUUT',
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -106,6 +103,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: SafeArea(
+        bottom: false, // Penting ketika menggunakan navigation bar yang melayang
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Padding(
@@ -294,6 +292,9 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
+                
+                // Add extra padding at the bottom to prevent content from being hidden by navigation bar
+                const SizedBox(height: 80),
               ],
             ),
           ),
