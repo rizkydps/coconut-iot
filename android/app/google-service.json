@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "273530551047",
+    "project_id": "coconut-iot",
+    "storage_bucket": "coconut-iot.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:273530551047:android:ee80f932fe954ea31363a2",
+        "android_client_info": {
+          "package_name": "com.example.coco_apps"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "273530551047-ck2mc9psc6epggnso65thvadqi6k18jr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCG9MPcX2cOW9pvj8AsjkZoqXM92anP7rY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "273530551047-ck2mc9psc6epggnso65thvadqi6k18jr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "273530551047-b7r89s9ktvtas4ecs6n9iq5tu3hemv6p.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.modernlogintute"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:273530551047:android:0f214c5ac5ff0f251363a2",
+        "android_client_info": {
+          "package_name": "com.example.modernlogintute"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "273530551047-lbiitvots3ocv2lqlcfeio87dnc8f7oh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.modernlogintute",
+            "certificate_hash": "bb94d08719e536112916aa2147a8a42333704440"
+          }
+        },
+        {
+          "client_id": "273530551047-ck2mc9psc6epggnso65thvadqi6k18jr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCG9MPcX2cOW9pvj8AsjkZoqXM92anP7rY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "273530551047-ck2mc9psc6epggnso65thvadqi6k18jr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "273530551047-b7r89s9ktvtas4ecs6n9iq5tu3hemv6p.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.modernlogintute"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
