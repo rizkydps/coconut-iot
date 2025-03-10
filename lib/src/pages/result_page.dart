@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 class ResultPage extends StatefulWidget {
   const ResultPage({Key? key}) : super(key: key);
@@ -38,17 +39,7 @@ class _ResultPageState extends State<ResultPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E2C),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF2A2D3E),
-        elevation: 0,
-        title: Text(
-          'Hasil Prediksi',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      ),
+      
       body: SafeArea(
         bottom: false,
         child: SingleChildScrollView(
@@ -228,6 +219,21 @@ class _ResultPageState extends State<ResultPage> {
                     );
                   },
                 ),
+                const SizedBox(height: 20),
+                
+                // Last updated section
+                Center(
+                  child: Text(
+                    'Last updated: ${DateFormat('dd MMM yyyy, HH:mm').format(DateTime.now())}',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white60,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                
+                // Add extra padding at the bottom to prevent content from being hidden by navigation bar
+                const SizedBox(height: 80),
               ],
             ),
           ),

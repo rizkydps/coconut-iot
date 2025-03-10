@@ -100,7 +100,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return Scaffold(
-      backgroundColor: const Color(0xFF21899C),
+      backgroundColor: const Color(0xFF1E1E2C),
       body: SafeArea(
         child: SizedBox(
           height: size.height,
@@ -279,7 +279,7 @@ class _LoginPageState extends State<LoginPage> {
       height: size.height / 12,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10.0),
-        color: const Color(0xFF4DA1B0),
+        color: const Color(0xFF2A2D3E),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -328,7 +328,7 @@ class _LoginPageState extends State<LoginPage> {
       height: size.height / 12,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10.0),
-        color: const Color(0xFF4DA1B0),
+        color: const Color(0xFF2A2D3E),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -514,7 +514,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(width: 16),
                 Text(
-                  'Google',
+                  'Login with Google',
                   style: GoogleFonts.inter(
                     fontSize: 14.0,
                     color: Colors.white,
@@ -533,7 +533,7 @@ class _LoginPageState extends State<LoginPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Text(
-          "Don't have an account?",
+          "Don't have an account? ",
           style: GoogleFonts.inter(
             fontSize: 14.0,
             color: Colors.white,

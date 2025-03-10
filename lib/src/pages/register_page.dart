@@ -36,7 +36,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return Scaffold(
-      backgroundColor: const Color(0xFF21899C),
+      backgroundColor: const Color(0xFF1E1E2C),
       body: SafeArea(
         child: SingleChildScrollView(
           child: SizedBox(
@@ -237,7 +237,7 @@ class _RegisterPageState extends State<RegisterPage> {
       height: size.height / 12,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10.0),
-        color: const Color(0xFF4DA1B0),
+        color: const Color(0xFF2A2D3E),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -307,7 +307,7 @@ class _RegisterPageState extends State<RegisterPage> {
       height: size.height / 12,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10.0),
-        color: const Color(0xFF4DA1B0),
+        color: const Color(0xFF2A2D3E),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -380,7 +380,7 @@ class _RegisterPageState extends State<RegisterPage> {
       height: size.height / 12,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10.0),
-        color: const Color(0xFF4DA1B0),
+        color: const Color(0xFF2A2D3E),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -465,7 +465,7 @@ class _RegisterPageState extends State<RegisterPage> {
       height: size.height / 12,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10.0),
-        color: const Color(0xFF4DA1B0),
+        color: const Color(0xFF2A2D3E),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -785,7 +785,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
             // Teks Google
             Text(
-              'Google',
+              'Login with Google',
               style: GoogleFonts.inter(
                 fontSize: 14.0,
                 color: Colors.white,

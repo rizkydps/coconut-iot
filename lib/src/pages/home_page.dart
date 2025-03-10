@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'auth_service.dart';
-import 'dart:async';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -13,8 +12,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final AuthService _authService = AuthService();
-  late Timer _timer;
-  String _currentTime = '';
+
   bool _deviceStatus = false;
   
   // Sensor data - normally this would come from your IoT device
@@ -33,75 +31,11 @@ class _HomePageState extends State<HomePage> {
   final String _longitude = '110.3695';
 
   @override
-  void initState() {
-    super.initState();
-    _updateTime();
-    // Update time every second
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) => _updateTime());
-  }
-  
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
-  }
-  
-  void _updateTime() {
-    setState(() {
-      _currentTime = DateFormat('HH:mm:ss').format(DateTime.now());
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
       backgroundColor: const Color(0xFF1E1E2C),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF2A2D3E),
-        elevation: 0,
-        title: Row(
-          children: [
-            Image.asset(
-              'assets/coco.png', // Ensure you have this asset
-              height: 40,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.eco, color: Colors.green, size: 40);
-              },
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'COCONUUT',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Center(
-              child: Text(
-                _currentTime,
-                style: GoogleFonts.robotoMono(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () async {
-              await _authService.signOut();
-              if (!mounted) return;
-              Navigator.of(context).pushReplacementNamed('/login');
-            },
-          ),
-        ],
-      ),
+      
       body: SafeArea(
         bottom: false, // Penting ketika menggunakan navigation bar yang melayang
         child: SingleChildScrollView(

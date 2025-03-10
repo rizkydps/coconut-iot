@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'home_page.dart';
 import 'analysis_page.dart';
 import 'result_page.dart';
+import 'dart:async';
+
 
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
@@ -12,13 +16,35 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
-  
+  String _currentTime = '';
+  late Timer _timer;
+
   // List halaman yang akan ditampilkan
   final List<Widget> _pages = [
     const HomePage(),
     const AnalysisPage(),
     const ResultPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _updateTime();
+    // Update time every second
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) => _updateTime());
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  void _updateTime() {
+    setState(() {
+      _currentTime = DateFormat('HH:mm:ss').format(DateTime.now());
+    });
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -29,10 +55,57 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true, // Penting agar konten dapat terlihat di bawah navigation bar
-      body: _pages[_selectedIndex], // Menampilkan halaman yang dipilih
-      
-      // Navigation bar yang melayang
+      extendBody: true,
+      backgroundColor: const Color(0xFF1E1E2C),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF2A2D3E),
+        elevation: 0,
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/coco.png', // Pastikan Anda memiliki asset ini
+              height: 40,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(Icons.eco, color: Colors.green, size: 40);
+              },
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'COCONUUT',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Text(
+                _currentTime,
+                style: GoogleFonts.robotoMono(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Expanded(
+              child: _pages[_selectedIndex], // Menampilkan halaman yang dipilih
+            ),
+            // Last updated section
+            
+          ],
+        ),
+      ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(bottom: 20.0),
         child: Container(
@@ -61,11 +134,11 @@ class _MainPageState extends State<MainPage> {
       ),
     );
   }
-  
+
   // Helper method untuk membangun item navigasi
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = _selectedIndex == index;
-    
+
     return InkWell(
       onTap: () => _onItemTapped(index),
       child: AnimatedContainer(
