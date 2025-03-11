@@ -52,12 +52,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCLFxgzcujRaFF2SFe5CgOtT9l5CxCRQDo',
-    appId: '1:273530551047:web:ccb59e50511172651363a2',
-    messagingSenderId: '273530551047',
-    projectId: 'coconut-iot',
-    authDomain: 'coconut-iot.firebaseapp.com',
-    storageBucket: 'coconut-iot.firebasestorage.app',
+  apiKey: 'AIzaSyCLFxgzcujRaFF2SFe5CgOtT9l5CxCRQDo',
+  appId: '1:273530551047:web:ccb59e50511172651363a2',
+  messagingSenderId: '273530551047',
+  projectId: 'coconut-iot',
+  authDomain: 'coconut-iot.firebaseapp.com',
+  storageBucket: 'coconut-iot.firebasestorage.app',
+  databaseURL: 'https://coconut-iot-default-rtdb.asia-southeast1.firebasedatabase.app/', // Perbarui ini
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -66,6 +67,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '273530551047',
     projectId: 'coconut-iot',
     storageBucket: 'coconut-iot.firebasestorage.app',
+    databaseURL: 'https://coconut-iot-default-rtdb.asia-southeast1.firebasedatabase.app/', // Perbarui ini
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -77,5 +79,6 @@ class DefaultFirebaseOptions {
     androidClientId: '273530551047-lbiitvots3ocv2lqlcfeio87dnc8f7oh.apps.googleusercontent.com',
     iosClientId: '273530551047-vnldoq1k66g38lha84da0btut0lj1n7v.apps.googleusercontent.com',
     iosBundleId: 'com.example.cocoApps',
+    databaseURL: 'https://coconut-iot-default-rtdb.asia-southeast1.firebasedatabase.app/', // Perbarui ini
   );
 }

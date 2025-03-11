@@ -212,47 +212,14 @@ class _AnalyzePageState extends State<AnalyzePage> {
     });
   }
 
-  Future<void> _resetData() async {
-    try {
-      await _database.child('sensors').remove();
-      setState(() {
-        _sensorData = [];
-        _averageData = {
-          'Nitrogen': 0,
-          'Phosphorus': 0,
-          'Potassium': 0,
-          'pH': 0,
-          'EC': 0,
-          'Temperature': 0,
-          'Humidity': 0,
-        };
-        _locations = [];
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Semua data telah dihapus'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal menghapus data: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E2C),
       appBar: AppBar(
         backgroundColor: const Color(0xFF2A2D3E),
-        centerTitle: true, // Ini akan membuat title berada di tengah
         title: Text(
-          'Analysis',
+          'Soil Analysis',
           style: GoogleFonts.poppins(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -260,18 +227,12 @@ class _AnalyzePageState extends State<AnalyzePage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.blue),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _fetchSensorData,
             tooltip: 'Refresh Data',
           ),
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: _resetData,
-            tooltip: 'Reset Data',
-          ),
         ],
       ),
-
       body: _isLoading
           ? const Center(
               child: Column(
@@ -368,191 +329,7 @@ class _AnalyzePageState extends State<AnalyzePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              
-                              
-                              // Map section
-                              Text(
-                                'Lokasi Pengukuran',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              
-                              const SizedBox(height: 16),
-                              
-                              // Map
-                              _locations.isEmpty
-                              ? Card(
-                                  color: const Color(0xFF2A2D3E),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Center(
-                                      child: Column(
-                                        children: [
-                                          const Icon(
-                                            Icons.location_off,
-                                            color: Colors.white70,
-                                            size: 48,
-                                          ),
-                                          const SizedBox(height: 16),
-                                          Text(
-                                            'Tidak ada data lokasi',
-                                            style: GoogleFonts.poppins(
-                                              color: Colors.white70,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : Card(
-                                  color: const Color(0xFF2A2D3E),
-                                  elevation: 4,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: SizedBox(
-                                      height: 300,
-                                      child: FlutterMap(
-                                        options: MapOptions(
-                                          center: _locations.first,
-                                          zoom: 13.0,
-                                        ),
-                                        children: [
-                                          TileLayer(
-                                            urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                            subdomains: const ['a', 'b', 'c'],
-                                          ),
-                                          PolylineLayer(
-                                            polylines: [
-                                              Polyline(
-                                                points: _locations,
-                                                color: Colors.blue,
-                                                strokeWidth: 4.0,
-                                              ),
-                                            ],
-                                          ),
-                                          MarkerLayer(
-                                            markers: _locations
-                                                .map(
-                                                  (point) => Marker(
-                                                    point: point,
-                                                    width: 80,
-                                                    height: 80,
-                                                    builder: (context) => const Icon(
-                                                      Icons.location_on,
-                                                      color: Colors.red,
-                                                      size: 30,
-                                                    ),
-                                                  ),
-                                                )
-                                                .toList(),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                              
-                              const SizedBox(height: 24),
-                              
-                              // Recorded measurements
-                              Text(
-                                'Pengukuran Tersimpan',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              
-                              // List of measurements
-                              ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: _sensorData.length,
-                                itemBuilder: (context, index) {
-                                  final data = _sensorData[index];
-                                  final name = data['name'] ?? 'Unnamed';
-                                  
-                                  // Handle timestamp safely
-                                  DateTime timestamp;
-                                  try {
-                                    if (data['timestamp'] is int) {
-                                      timestamp = DateTime.fromMillisecondsSinceEpoch(data['timestamp'] as int);
-                                    } else if (data['timestamp'] is String) {
-                                      // Try parsing if it's a string representation of a number
-                                      timestamp = DateTime.fromMillisecondsSinceEpoch(int.parse(data['timestamp']));
-                                    } else {
-                                      timestamp = DateTime.now();
-                                    }
-                                  } catch (e) {
-                                    print('Error parsing timestamp: $e');
-                                    timestamp = DateTime.now();
-                                  }
-                                  
-                                  // Handle coordinates safely
-                                  String locationText = 'Tidak ada data lokasi';
-                                  if (data.containsKey('latitude') && data.containsKey('longitude')) {
-                                    locationText = '${data['latitude']}, ${data['longitude']}';
-                                  }
-                                  
-                                  return Card(
-                                    color: const Color(0xFF2A2D3E),
-                                    elevation: 4,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    child: ListTile(
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                      title: Text(
-                                        name,
-                                        style: GoogleFonts.poppins(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      subtitle: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Tanggal: ${DateFormat('dd MMM yyyy, HH:mm').format(timestamp)}',
-                                            style: GoogleFonts.poppins(
-                                              color: Colors.white70,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                          Text(
-                                            'Lokasi: $locationText',
-                                            style: GoogleFonts.poppins(
-                                              color: Colors.white70,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      trailing: const Icon(
-                                        Icons.arrow_forward_ios,
-                                        color: Colors.white54,
-                                        size: 16,
-                                      ),
-                                      onTap: () {
-                                        // Show detailed view
-                                        _showDetailDialog(data);
-                                      },
-                                    ),
-                                  );
-                                },
-                              ),
-
+                              // Average data header
                               Text(
                                 'Parameter Tanah Rata-rata',
                                 style: GoogleFonts.poppins(
@@ -568,6 +345,9 @@ class _AnalyzePageState extends State<AnalyzePage> {
                                   color: Colors.white70,
                                 ),
                               ),
+                              
+                              const SizedBox(height: 16),
+                              
                               // Average data cards
                               GridView.builder(
                                 shrinkWrap: true,
@@ -663,6 +443,183 @@ class _AnalyzePageState extends State<AnalyzePage> {
                                           ),
                                         ],
                                       ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              
+                              const SizedBox(height: 24),
+                              
+                              // Map section
+                              Text(
+                                'Lokasi Pengukuran',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              
+                              const SizedBox(height: 16),
+                              
+                              // Map
+                              _locations.isEmpty
+                                  ? Card(
+                                      color: const Color(0xFF2A2D3E),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16.0),
+                                        child: Center(
+                                          child: Column(
+                                            children: [
+                                              const Icon(
+                                                Icons.location_off,
+                                                color: Colors.white70,
+                                                size: 48,
+                                              ),
+                                              const SizedBox(height: 16),
+                                              Text(
+                                                'Tidak ada data lokasi',
+                                                style: GoogleFonts.poppins(
+                                                  color: Colors.white70,
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : Card(
+                                      color: const Color(0xFF2A2D3E),
+                                      elevation: 4,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: SizedBox(
+                                          height: 300,
+                                          child: FlutterMap(
+                                            options: MapOptions(
+                                              center: _locations.first,
+                                              zoom: 13.0,
+                                            ),
+                                            children: [
+                                              TileLayer(
+                                                urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                                subdomains: const ['a', 'b', 'c'],
+                                              ),
+                                              MarkerLayer(
+                                                markers: _locations
+                                                    .map(
+                                                      (point) => Marker(
+                                                        point: point,
+                                                        width: 80,
+                                                        height: 80,
+                                                        builder: (context) => const Icon(
+                                                          Icons.location_on,
+                                                          color: Colors.red,
+                                                          size: 30,
+                                                        ),
+                                                      ),
+                                                    )
+                                                    .toList(),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                              
+                              const SizedBox(height: 24),
+                              
+                              // Recorded measurements
+                              Text(
+                                'Pengukuran Tersimpan',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              
+                              const SizedBox(height: 16),
+                              
+                              // List of measurements
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: _sensorData.length,
+                                itemBuilder: (context, index) {
+                                  final data = _sensorData[index];
+                                  final name = data['name'] ?? 'Unnamed';
+                                  
+                                  // Handle timestamp safely
+                                  DateTime timestamp;
+                                  try {
+                                    if (data['timestamp'] is int) {
+                                      timestamp = DateTime.fromMillisecondsSinceEpoch(data['timestamp'] as int);
+                                    } else if (data['timestamp'] is String) {
+                                      // Try parsing if it's a string representation of a number
+                                      timestamp = DateTime.fromMillisecondsSinceEpoch(int.parse(data['timestamp']));
+                                    } else {
+                                      timestamp = DateTime.now();
+                                    }
+                                  } catch (e) {
+                                    print('Error parsing timestamp: $e');
+                                    timestamp = DateTime.now();
+                                  }
+                                  
+                                  // Handle coordinates safely
+                                  String locationText = 'Tidak ada data lokasi';
+                                  if (data.containsKey('latitude') && data.containsKey('longitude')) {
+                                    locationText = '${data['latitude']}, ${data['longitude']}';
+                                  }
+                                  
+                                  return Card(
+                                    color: const Color(0xFF2A2D3E),
+                                    elevation: 4,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    child: ListTile(
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      title: Text(
+                                        name,
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      subtitle: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Tanggal: ${DateFormat('dd MMM yyyy, HH:mm').format(timestamp)}',
+                                            style: GoogleFonts.poppins(
+                                              color: Colors.white70,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Lokasi: $locationText',
+                                            style: GoogleFonts.poppins(
+                                              color: Colors.white70,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      trailing: const Icon(
+                                        Icons.arrow_forward_ios,
+                                        color: Colors.white54,
+                                        size: 16,
+                                      ),
+                                      onTap: () {
+                                        // Show detailed view
+                                        _showDetailDialog(data);
+                                      },
                                     ),
                                   );
                                 },
@@ -786,4 +743,3 @@ class TimeoutException implements Exception {
   @override
   String toString() => message;
 }
-

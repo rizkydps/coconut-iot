@@ -22,8 +22,9 @@ class _MainPageState extends State<MainPage> {
   // List halaman yang akan ditampilkan
   final List<Widget> _pages = [
     const HomePage(),
-    const AnalysisPage(),
+    const AnalyzePage(),
     const ResultPage(),
+    
   ];
 
   @override
