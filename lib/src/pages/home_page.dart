@@ -25,13 +25,13 @@ class _HomePageState extends State<HomePage> {
   
   // Sensor data - normally this would come from your IoT device
   final Map<String, double> _sensorData = {
-    'Nitrogen': 52.4,
-    'Phosphorus': 23.4,
-    'Potassium': 67.2,
-    'pH': 6.5,
-    'EC': 1.2,
-    'Temperature': 28.3,
-    'Humidity': 65.7,
+    'Nitrogen': 10.4,
+    'Phosphorus': 10.4,
+    'Potassium': 10.2,
+    'pH': 10.5,
+    'EC': 10.2,
+    'Temperature': 10.3,
+    'Humidity': 10.7,
 
   };
   

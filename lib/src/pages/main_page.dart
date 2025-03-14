@@ -6,26 +6,26 @@ import 'analysis_page.dart';
 import 'result_page.dart';
 import 'dart:async';
 
-
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
 
   @override
-  State<MainPage> createState() => _MainPageState();
+  State<MainPage> createState() => MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
   String _currentTime = '';
   late Timer _timer;
 
-  // List halaman yang akan ditampilkan
-  final List<Widget> _pages = [
-    const HomePage(),
-    const AnalyzePage(),
-    const ResultPage(),
-    
-  ];
+  // Declare variables needed for state management
+  List<PlantRecommendationResult> _recommendations = [];
+  Map<String, double> _soilParameters = {};
+  bool _isLoading = false;
+  bool _isButtonClicked = false;
+
+  // Declare the pages list but initialize it later
+  late List<Widget> _pages;
 
   @override
   void initState() {
@@ -33,6 +33,18 @@ class _MainPageState extends State<MainPage> {
     _updateTime();
     // Update time every second
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) => _updateTime());
+
+    // Initialize _pages in initState
+    _pages = [
+      const HomePage(),
+      const AnalyzePage(),
+      ResultPage(
+        recommendations: _recommendations,
+        soilParameters: _soilParameters,
+        isLoading: _isLoading,
+        isButtonClicked: _isButtonClicked,
+      ),
+    ];
   }
 
   @override
@@ -47,9 +59,40 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  void _onItemTapped(int index) {
+  void onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+    });
+  }
+
+  void updateResultsPage({
+    required List<PlantRecommendationResult> recommendations,
+    required Map<String, double> soilParameters,
+    bool isLoading = false,
+    String? errorMessage,
+    bool isButtonClicked = false,
+  }) {
+    setState(() {
+      _recommendations = recommendations;
+      _soilParameters = soilParameters;
+      _isLoading = isLoading;
+      _isButtonClicked = isButtonClicked;
+
+      // Update ResultPage in _pages list
+      _pages[2] = ResultPage(
+        recommendations: _recommendations,
+        soilParameters: _soilParameters,
+        isLoading: _isLoading,
+        errorMessage: errorMessage,
+        isButtonClicked: _isButtonClicked,
+      );
+    });
+  }
+
+  void navigateToResultPage() {
+    // Navigate to the ResultPage tab by changing _selectedIndex
+    setState(() {
+      _selectedIndex = 2; // Assuming ResultPage is the third tab (index 2)
     });
   }
 
@@ -64,7 +107,7 @@ class _MainPageState extends State<MainPage> {
         title: Row(
           children: [
             Image.asset(
-              'assets/coco.png', // Pastikan Anda memiliki asset ini
+              'assets/coco.png', // Ensure you have this asset
               height: 40,
               errorBuilder: (context, error, stackTrace) {
                 return const Icon(Icons.eco, color: Colors.green, size: 40);
@@ -100,10 +143,8 @@ class _MainPageState extends State<MainPage> {
         child: Column(
           children: [
             Expanded(
-              child: _pages[_selectedIndex], // Menampilkan halaman yang dipilih
+              child: _pages[_selectedIndex], // Display the selected page
             ),
-            // Last updated section
-            
           ],
         ),
       ),
@@ -132,21 +173,21 @@ class _MainPageState extends State<MainPage> {
             ],
           ),
         ),
-      ),
+      ),  
     );
   }
 
-  // Helper method untuk membangun item navigasi
+  // Helper method to build navigation items
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = _selectedIndex == index;
 
     return InkWell(
-      onTap: () => _onItemTapped(index),
+      onTap: () => onItemTapped(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.green.withOpacity(0.3) : Colors.transparent,
+          color: isSelected ? Colors.green.withAlpha((0.3 * 255).toInt()) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
