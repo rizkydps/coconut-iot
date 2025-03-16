@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'analysis_page.dart';
+
 
 class PlantRecommendationResult {
   final String plantName;
@@ -61,7 +63,7 @@ class ResultPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.info_outline, color: Colors.blue, size: 64),
+            const Icon(Icons.info_outline, color: Colors.blue, size: 64),
             const SizedBox(height: 16),
             Text(
               'Data Belum Ada',
@@ -75,7 +77,7 @@ class ResultPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32.0),
               child: Text(
-                'Silakan klik tombol "Get Plant Recommendations" pada halaman analysis',
+                'Silakan klik tombol "Analisis Data" pada halaman analysis',
                 style: GoogleFonts.poppins(
                   color: Colors.white70,
                   fontSize: 14,
@@ -95,7 +97,7 @@ class ResultPage extends StatelessWidget {
             CircularProgressIndicator(),
             SizedBox(height: 16),
             Text(
-              'Analyzing soil data and generating recommendations...',
+              'Menganalisis data tanah dan menghasilkan rekomendasi...',
               style: TextStyle(color: Colors.white70),
               textAlign: TextAlign.center,
             ),
@@ -108,7 +110,7 @@ class ResultPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, color: Colors.red, size: 64),
+            const Icon(Icons.error_outline, color: Colors.red, size: 64),
             const SizedBox(height: 16),
             Text(
               'Error',
@@ -131,16 +133,20 @@ class ResultPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back),
-              label: const Text('Go Back'),
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: Colors.blue,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AnalyzePage()),
+                ),
+                icon: const Icon(Icons.analytics),
+                label: const Text('Go to Analysis'),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.blue,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
               ),
-            ),
+
           ],
         ),
       );
@@ -150,7 +156,7 @@ class ResultPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.info_outline, color: Colors.blue, size: 64),
+            const Icon(Icons.info_outline, color: Colors.blue, size: 64),
             const SizedBox(height: 16),
             Text(
               'Belum ada pengukuran tersimpan',
@@ -191,16 +197,13 @@ class ResultPage extends StatelessWidget {
           backgroundColor: const Color(0xFF2A2D3E),
           centerTitle: true,
           title: Text(
-            'Plant Recommendations',
+            'Rekomendasi Tanaman',
             style: GoogleFonts.poppins(
               color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
           ),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
+          
         ),
         body: body,
       );
@@ -212,7 +215,7 @@ class ResultPage extends StatelessWidget {
 
   Widget _buildResultsView(BuildContext context) {
     return SingleChildScrollView(
-      child: Padding(
+      child: Padding( 
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,14 +234,14 @@ class ResultPage extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.landscape,
                           color: Colors.green,
                           size: 24,
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Soil Analysis Results',
+                          'Hasil Analisis Tanah',
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -280,8 +283,9 @@ class ResultPage extends StatelessWidget {
                         }
 
                         String unit = '';
-                        if (entry.key == 'Temperature') unit = '°C';
-                        else if (entry.key == 'Humidity' || 
+                        if (entry.key == 'Temperature') {
+                          unit = '°C';
+                        } else if (entry.key == 'Humidity' || 
                                  entry.key == 'Nitrogen' || 
                                  entry.key == 'Phosphorus' || 
                                  entry.key == 'Potassium') unit = '%';
@@ -301,7 +305,7 @@ class ResultPage extends StatelessWidget {
                             radius: 12,
                             child: Text(
                               entry.key[0],
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -320,14 +324,14 @@ class ResultPage extends StatelessWidget {
             // Recommendations Title
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.eco,
                   color: Colors.green,
                   size: 24,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Recommended Plants',
+                  'Rekomendasi Tanaman',
                   style: GoogleFonts.poppins(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -338,7 +342,7 @@ class ResultPage extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Based on your soil analysis, these plants are most compatible:',
+              'Berdasarkan analisis tanah Anda, tanaman berikut paling cocok:',
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 color: Colors.white70,
@@ -367,7 +371,7 @@ class ResultPage extends StatelessWidget {
                       backgroundColor: Colors.green,
                       child: Text(
                         '${index + 1}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -442,14 +446,14 @@ class ResultPage extends StatelessWidget {
                       const Divider(color: Colors.grey),
                       const SizedBox(height: 8),
                       _buildInfoSection(
-                        'Compatibility Reasons',
+                        'Alasan Kompatibilitas',
                         recommendation.reasons,
                         Icons.check_circle,
                         Colors.green,
                       ),
                       const SizedBox(height: 16),
                       _buildInfoSection(
-                        'Care Tips',
+                        'Tips Perawatan',
                         recommendation.careTips,
                         Icons.tips_and_updates,
                         Colors.amber,

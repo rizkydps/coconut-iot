@@ -18,7 +18,7 @@ class _HomePageState extends State<HomePage> {
   final AuthService _authService = AuthService();
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
   final TextEditingController _nameController = TextEditingController();
-  final Uuid _uuid = Uuid();
+  static const Uuid _uuid = Uuid();
   
   bool _deviceStatus = false;
   bool _isSaving = false;
@@ -276,7 +276,7 @@ class _HomePageState extends State<HomePage> {
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
+                              backgroundColor: const Color.fromRGBO(76, 175, 80, 1),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               
                               shape: RoundedRectangleBorder(
@@ -379,8 +379,9 @@ class _HomePageState extends State<HomePage> {
                     
                     // Units for each parameter
                     String unit = '';
-                    if (key == 'Temperature') unit = '°C';
-                    else if (key == 'Humidity' || key == 'Nitrogen' || key == 'Phosphorus' || key == 'Potassium') unit = '%';
+                    if (key == 'Temperature') {
+                      unit = '°C';
+                    } else if (key == 'Humidity' || key == 'Nitrogen' || key == 'Phosphorus' || key == 'Potassium') unit = '%';
                     else if (key == 'EC') unit = 'mS/cm';
                     
                     return Card(

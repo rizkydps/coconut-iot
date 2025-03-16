@@ -30,7 +30,7 @@ class OpenRouterService {
           }
         ]
       }
-      Berikan setidaknya 5 rekomendasi tanaman dengan skor kompatibilitas antara 0-100.
+      Berikan setidaknya 10 rekomendasi tanaman dengan skor kompatibilitas antara 0-100.
       ''';
 
     // Prepare the API request
@@ -63,14 +63,14 @@ class OpenRouterService {
         final jsonContent = jsonMatch.group(0);
         return jsonDecode(jsonContent!);
       } else {
-        throw Exception('Failed to parse JSON from API response');
+        throw Exception('Gagal mendapatkan data rekomendasi. Silakan coba lagi.');
       }
     } else {
       throw Exception('API request failed: ${response.statusCode}, ${response.body}');
     }
   } catch (e) {
     print('Error getting plant recommendations: $e');
-    throw Exception('Failed to get plant recommendations: $e');
+    throw Exception('Kami tidak dapat memberikan rekomendasi tanaman saat ini. Silakan coba lagi nanti.  $e');
   }
 }
 }

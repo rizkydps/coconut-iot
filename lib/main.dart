@@ -6,12 +6,20 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  print('Firebase berhasil diinisialisasi');
 
-  // Tes koneksi ke database
+  // Inisialisasi Firebase dengan nama khusus
+  try {
+    await Firebase.initializeApp(
+      name: 'coconut', // Berikan nama unik untuk instance Firebase
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('Firebase berhasil diinisialisasi dengan nama: coconut');
+  } catch (error) {
+    print('Gagal menginisialisasi Firebase: $error');
+    return; // Hentikan eksekusi jika Firebase gagal diinisialisasi
+  }
+
+  // Tes koneksi ke Firebase Realtime Database
   try {
     final DatabaseReference ref = FirebaseDatabase.instance.ref('test');
     await ref.set({
@@ -19,10 +27,12 @@ void main() async {
       'timestamp': ServerValue.timestamp,
     });
     print('Tes koneksi Firebase berhasil');
-  } catch (error) {
+  } catch (error, stackTrace) {
     print('Error saat menguji koneksi Firebase: $error');
+    print('Stack trace: $stackTrace');
   }
 
+  // Jalankan aplikasi
   runApp(const MyApp());
 }
 

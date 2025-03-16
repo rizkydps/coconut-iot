@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:logging/logging.dart';
 import 'dart:math' as math;
 import 'ml_service.dart';
 import 'result_page.dart';
@@ -21,6 +22,7 @@ class AnalyzePage extends StatefulWidget {
 
 class _AnalyzePageState extends State<AnalyzePage> {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
+  final _logger = Logger('AnalysisPage');
   bool _isLoading = true;
   bool _hasError = false;
 
@@ -308,6 +310,134 @@ class _AnalyzePageState extends State<AnalyzePage> {
     }
   }
 
+  void _onTapMarker(int index) {
+    setState(() {
+      _activePopup = index;
+    });
+  }
+
+  Card buildMapCard(BuildContext context, List<LatLng> convexHull, List<LatLng> locations, List<Map<String, dynamic>> sensorData, int activePopup, Function(int) onTapMarker) {
+    return Card(
+      color: const Color(0xFF2A2D3E),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.5,
+          
+          child: FlutterMap(
+            options: MapOptions(
+              // Updated from 'center' to 'initialCenter'
+              initialCenter: convexHull.isNotEmpty 
+                  ? convexHull.first 
+                  : const LatLng(0, 0),
+              // Updated from 'zoom' to 'initialZoom'
+              initialZoom: 13.0,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                subdomains: const ['a', 'b', 'c'],
+              ),
+
+              // Polygon Layer
+              PolygonLayer(
+                polygons: [
+                  Polygon(
+                    points: convexHull,
+                    color: const Color.fromRGBO(255, 0, 0, 0.4),
+                    borderColor: Colors.blue,
+                    borderStrokeWidth: 3.0,
+                  ),
+                ],
+              ),
+
+              // Polyline Layer
+              if (locations.length >= 3)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: [...convexHull, convexHull.isNotEmpty ? convexHull.first : const LatLng(0, 0)],
+                      color: const Color.fromARGB(255, 22, 89, 236),
+                      strokeWidth: 4.0,
+                    ),
+                  ],
+                ),
+
+              // Marker Layer
+              MarkerLayer(
+                markers: locations.asMap().entries.map(
+                  (entry) {
+                    int index = entry.key;
+                    LatLng point = entry.value;
+                    String name = sensorData.isNotEmpty && index < sensorData.length
+                        ? (sensorData[index]['name'] ?? 'Unnamed')
+                        : 'Unnamed';
+
+                    return Marker(
+                      point: point,
+                      width: 80,
+                      height: 80,
+                      // Changed from 'builder' to 'child' to fix the undefined parameter
+                      child: GestureDetector(
+                        onTap: () {
+                          onTapMarker(index);
+                        },
+                        child: Column(
+                          children: [
+                            if (activePopup == index)
+                              Flexible(
+                                child: Container(
+                                  constraints: const BoxConstraints(
+                                    maxHeight: 50,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(6),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        // Replaced withOpacity with withValues
+                                        color: Colors.black.withValues(alpha: 51), // 0.2 * 255 = 51
+                                        blurRadius: 3,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Text(
+                                    name,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
+                                  ),
+                                ),
+                              ),
+
+                            const Icon(
+                              Icons.location_on,
+                              color: Colors.red,
+                              size: 30,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ).toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   void _calculateAverages() {
     print('Menghitung rata-rata...');
@@ -394,7 +524,7 @@ class _AnalyzePageState extends State<AnalyzePage> {
         _locations = [];
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Semua data telah dihapus'),
           backgroundColor: Colors.green,
         ),
@@ -562,7 +692,7 @@ Widget build(BuildContext context) {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline, color: Colors.red, size: 64),
+                    const Icon(Icons.error_outline, color: Colors.red, size: 64),
                     const SizedBox(height: 16),
                     Text(
                       'Gagal memuat data',
@@ -603,7 +733,7 @@ Widget build(BuildContext context) {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.info_outline, color: Colors.blue, size: 64),
+                        const Icon(Icons.info_outline, color: Colors.blue, size: 64),
                         const SizedBox(height: 16),
                         Text(
                           'Belum ada pengukuran tersimpan',
@@ -641,7 +771,7 @@ Widget build(BuildContext context) {
                           children: [
                             // Map section
                             Text(
-                              'Lokasi Pengukuran',
+                              'Lokasi Sample',
                               style: GoogleFonts.poppins(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -678,123 +808,13 @@ Widget build(BuildContext context) {
                                 ),
                               )
                             else
-                              Card(
-                                color: const Color(0xFF2A2D3E),
-                                elevation: 4,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: SizedBox(
-                                    height: MediaQuery.of(context).size.height * 0.5,
-
-                                    child: FlutterMap(
-                                      options: MapOptions(
-                                        center: _convexHull.isNotEmpty 
-                                            ? _convexHull.first 
-                                            : LatLng(0, 0),
-                                        zoom: 13.0,
-                                      ),
-                                      children: [
-                                        TileLayer(
-                                          urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                          subdomains: const ['a', 'b', 'c'],
-                                        ),
-
-                                        // Polygon Layer
-                                        PolygonLayer(
-                                          polygons: [
-                                            Polygon(
-                                              points: _convexHull,
-                                              color: const Color.fromRGBO(255, 0, 0, 0.9),
-                                              borderColor: Colors.blue,
-                                              borderStrokeWidth: 3.0,
-                                            ),
-                                          ],
-                                        ),
-
-                                        // Polyline Layer
-                                        if (_locations.length >= 3)
-                                          PolylineLayer(
-                                            polylines: [
-                                              Polyline(
-                                                points: [..._convexHull, _convexHull.first],
-                                                color: const Color.fromARGB(255, 22, 89, 236),
-                                                strokeWidth: 4.0,
-                                              ),
-                                            ],
-                                          ),
-
-                                        // Marker Layer
-                                        MarkerLayer(
-                                          markers: _locations.asMap().entries.map(
-                                            (entry) {
-                                              int index = entry.key;
-                                              LatLng point = entry.value;
-                                              String name = _sensorData.isNotEmpty && index < _sensorData.length
-                                                  ? (_sensorData[index]['name'] ?? 'Unnamed')
-                                                  : 'Unnamed';
-
-                                              return Marker(
-                                                point: point,
-                                                width: 80,
-                                                height: 80,
-                                                builder: (context) => GestureDetector(
-                                                  onTap: () {
-                                                    setState(() {
-                                                      _activePopup = _activePopup == index ? null : index;
-                                                    });
-                                                  },
-                                                  child: Column(
-                                                    children: [
-                                                      if (_activePopup == index)
-                                                        Flexible(
-                                                          child: Container(
-                                                            constraints: const BoxConstraints(
-                                                              maxHeight: 50,
-                                                            ),
-                                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                            decoration: BoxDecoration(
-                                                              color: Colors.white,
-                                                              borderRadius: BorderRadius.circular(6),
-                                                              boxShadow: [
-                                                                BoxShadow(
-                                                                  color: Colors.black.withOpacity(0.2),
-                                                                  blurRadius: 3,
-                                                                  offset: const Offset(0, 2),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                            child: Text(
-                                                              name,
-                                                              style: const TextStyle(
-                                                                color: Colors.black,
-                                                                fontWeight: FontWeight.bold,
-                                                                fontSize: 12,
-                                                              ),
-                                                              overflow: TextOverflow.ellipsis,
-                                                              maxLines: 2,
-                                                            ),
-                                                          ),
-                                                        ),
-
-                                                      const Icon(
-                                                        Icons.location_on,
-                                                        color: Colors.red,
-                                                        size: 30,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          ).toList(),
-                                        ),
-                                      ],
-                                    )
-                                  ),
-                                ),
+                              buildMapCard(
+                                context,
+                                _convexHull,
+                                _locations,
+                                _sensorData,
+                                _activePopup ?? -1,
+                                _onTapMarker,
                               ),
                               
                             // Reduced spacing between sections
@@ -802,7 +822,7 @@ Widget build(BuildContext context) {
                             
                             // Recorded measurements
                             Text(
-                              'Pengukuran Tersimpan',
+                              'Sample Tersimpan',
                               style: GoogleFonts.poppins(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -861,7 +881,7 @@ Widget build(BuildContext context) {
                                             color: Colors.blue.withOpacity(0.2),
                                             borderRadius: BorderRadius.circular(8),
                                           ),
-                                          child: Icon(
+                                          child: const Icon(
                                             Icons.sensors,
                                             color: Colors.blue,
                                             size: 24,
@@ -958,13 +978,13 @@ Widget build(BuildContext context) {
                             ),
 
                             // Reduced spacing between sections
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 0),
                             const Divider(color: Colors.grey),
-                            const SizedBox(height: 16), // Reduced spacing after divider
+                            const SizedBox(height: 8), // Reduced spacing after divider
 
                             // Parameter Tanah Rata-rata Section
                             Text(
-                              'Parameter Tanah Rata-rata',
+                              'Data Rata-rata Tanah',
                               style: GoogleFonts.poppins(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -972,7 +992,7 @@ Widget build(BuildContext context) {
                               ),
                             ),
                             Text(
-                              'Berdasarkan 7 pengukuran',
+                              'Berdasarkan 7 Pengukuran',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 color: Colors.white70,
@@ -981,74 +1001,67 @@ Widget build(BuildContext context) {
                             const SizedBox(height: 12), // Reduced spacing
 
                             // Parameters Grid
-                            GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                childAspectRatio: 2.5,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
+                            SingleChildScrollView(
+                              child: Column(
+                                children: _averageData.keys.map((key) {
+                                  double value = _averageData[key]!;
+
+                                  final Map<String, Map<String, dynamic>> sensorInfo = {
+                                    'Nitrogen': {'color': Colors.green, 'unit': '%'},
+                                    'Phosphorus': {'color': Colors.orange, 'unit': '%'},
+                                    'Potassium': {'color': Colors.purple, 'unit': '%'},
+                                    'pH': {'color': Colors.red, 'unit': ''},
+                                    'EC': {'color': Colors.yellow, 'unit': 'mS/cm'},
+                                    'Temperature': {'color': Colors.red, 'unit': '°C'},
+                                    'Humidity': {'color': Colors.blue, 'unit': '%'},
+                                  };
+
+                                  Color color = (sensorInfo[key]?['color'] as Color?) ?? Colors.grey;
+                                  String unit = (sensorInfo[key]?['unit'] as String?) ?? '';
+
+                                  return Container(
+                                    margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFF2A2D3E),
+                                      borderRadius: BorderRadius.circular(8),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: color.withOpacity(0.3),
+                                          blurRadius: 3,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            key,
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${value.toStringAsFixed(1)}$unit',
+                                            style: GoogleFonts.robotoMono(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: color,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
                               ),
-                              itemCount: _averageData.length,
-                              itemBuilder: (context, index) {
-                                String key = _averageData.keys.elementAt(index);
-                                double value = _averageData[key]!;
-
-                                // Definisi map dengan tipe yang lebih spesifik
-                                final Map<String, Map<String, dynamic>> sensorInfo = {
-                                  'Nitrogen': {'color': Colors.green, 'unit': '%'},
-                                  'Phosphorus': {'color': Colors.orange, 'unit': '%'},
-                                  'Potassium': {'color': Colors.purple, 'unit': '%'},
-                                  'pH': {'color': Colors.red, 'unit': ''},
-                                  'EC': {'color': Colors.yellow, 'unit': 'mS/cm'},
-                                  'Temperature': {'color': Colors.red, 'unit': '°C'},
-                                  'Humidity': {'color': Colors.blue, 'unit': '%'},
-                                };
-
-                                // Cast dari Object ke Color
-                                Color color = (sensorInfo[key]?['color'] as Color?) ?? Colors.grey;
-                                String unit = (sensorInfo[key]?['unit'] as String?) ?? '';
-
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: color.withOpacity(0.3),
-                                        blurRadius: 3,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        key,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${value.toStringAsFixed(1)}$unit',
-                                        style: GoogleFonts.robotoMono(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: color,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
                             ),
 
-                            const SizedBox(height: 16), // Reduced spacing between sections
+                            const SizedBox(height: 22), // Reduced spacing between sections
 
                             // Plant Recommendations Card
                             if (_sensorData.isNotEmpty)
@@ -1067,14 +1080,14 @@ Widget build(BuildContext context) {
                                       // Title and Icon
                                       Row(
                                         children: [
-                                          Icon(
+                                          const Icon(
                                             Icons.eco,
                                             color: Colors.green,
                                             size: 24,
                                           ),
                                           const SizedBox(width: 12),
                                           Text(
-                                            'Plant Recommendations',
+                                            'AI Analisis Tanaman',
                                             style: GoogleFonts.poppins(
                                               fontSize: 18,
                                               fontWeight: FontWeight.bold,
@@ -1087,7 +1100,7 @@ Widget build(BuildContext context) {
 
                                       // Description
                                       Text(
-                                        'Get AI-powered suggestions for plants that would grow well in your soil based on the analysis data.',
+                                        'Menggunakan AI untuk dapatkan saran tanaman yang akan tumbuh baik di tanah Anda berdasarkan data anda.',
                                         style: GoogleFonts.poppins(
                                           fontSize: 14,
                                           color: Colors.white70,
@@ -1149,7 +1162,7 @@ Widget build(BuildContext context) {
                                                 },
                                           icon: const Icon(Icons.recommend),
                                           label: Text(
-                                            'Get Plant Recommendations',
+                                            'Analisis Data',
                                             style: GoogleFonts.poppins(
                                               fontWeight: FontWeight.w500,
                                             ),
@@ -1169,7 +1182,19 @@ Widget build(BuildContext context) {
                                 ),
                               ),  
 
-                            const SizedBox(height: 24), // Reduced spacing at the bottom of the page
+                            const SizedBox(height: 20),
+                            Center(
+                              child: Text(
+                                'Last updated: ${DateFormat('dd MMM yyyy, HH:mm').format(DateTime.now())}',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white60,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            
+                            // Add extra padding at the bottom to prevent content from being hidden by navigation bar
+                            const SizedBox(height: 80),
                             ],
                             
                           ),

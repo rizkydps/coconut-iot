@@ -16,7 +16,7 @@ class AuthService {
       );
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -36,7 +36,7 @@ class AuthService {
       
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -76,7 +76,7 @@ class AuthService {
       // Once signed in, return the UserCredential
       return await _auth.signInWithCredential(credential);
     } on FirebaseAuthException catch (e) {
-      throw e;
+      rethrow;
     }
   }
 

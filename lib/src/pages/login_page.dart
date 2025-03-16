@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:login_ui_demo/src/pages/register_page.dart';
+import 'register_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_service.dart'; 
 import 'main_page.dart'; 
@@ -264,7 +264,7 @@ class _LoginPageState extends State<LoginPage> {
           TextSpan(
             text: 'PAGE',
             style: TextStyle(
-              color: Color(0xFFFE9879),
+              color: Colors.green,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -449,7 +449,7 @@ class _LoginPageState extends State<LoginPage> {
         height: size.height / 13,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10.0),
-          color: const Color(0xFFF56B3F),
+          color: const Color.fromRGBO(76, 175, 80, 1),
         ),
         child: _isLoading
             ? const CircularProgressIndicator(color: Colors.white)

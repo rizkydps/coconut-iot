@@ -222,7 +222,7 @@ class _RegisterPageState extends State<RegisterPage> {
           TextSpan(
             text: 'PAGE',
             style: TextStyle(
-              color: Color(0xFFFE9879),
+              color: Color.fromRGBO(76, 175, 80, 1),
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -614,7 +614,7 @@ class _RegisterPageState extends State<RegisterPage> {
         height: size.height / 13,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10.0),
-          color: _termsAccepted ? const Color(0xFFF56B3F) : Colors.grey,
+          color: _termsAccepted ? const Color.fromRGBO(76, 175, 80, 1) : Colors.grey,
         ),
         child: Text(
           'Create Account',
@@ -690,7 +690,7 @@ class _RegisterPageState extends State<RegisterPage> {
             if (!mounted) return;
             Navigator.pushReplacement(
               context, 
-              MaterialPageRoute(builder: (context) => MainPage()),
+              MaterialPageRoute(builder: (context) => const MainPage()),
             );
           }
         } on FirebaseAuthException catch (e) {
@@ -817,7 +817,7 @@ class _RegisterPageState extends State<RegisterPage> {
             // Navigasi ke halaman Register
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => LoginPage()),
+              MaterialPageRoute(builder: (context) => const LoginPage()),
             );
           },
           child: Text(
