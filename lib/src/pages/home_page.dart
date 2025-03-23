@@ -18,6 +18,7 @@ class _HomePageState extends State<HomePage> {
   final AuthService _authService = AuthService();
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
   final TextEditingController _nameController = TextEditingController();
+  
   static const Uuid _uuid = Uuid();
   
   bool _deviceStatus = false;
@@ -139,56 +140,55 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _performSave(String name) async {
-    setState(() {
-      _isSaving = true;
+  setState(() {
+    _isSaving = true;
+  });
+  
+  try {
+    // Get current user ID
+    String? userId = _authService.getCurrentUser()?.uid;
+    
+    if (userId == null) {
+      throw Exception("No user is logged in");
+    }
+    
+    // Generate a unique ID for this measurement
+    String measurementId = _uuid.v4();
+    
+    // Create data to save
+    Map<String, dynamic> sensorEntry = {
+      'id': measurementId,
+      'name': name,
+      'longitude': _longitude,
+      'latitude': _latitude,
+      'timestamp': ServerValue.timestamp,
+    };
+    
+    // Add all sensor data
+    _sensorData.forEach((key, value) {
+      sensorEntry[key] = value;
     });
     
-    try {
-      // Generate a unique ID for this measurement
-      String measurementId = _uuid.v4();
-      
-      // Create data to save
-      Map<String, dynamic> sensorEntry = {
-        'id': measurementId,
-        'name': name,
-        'longitude': _longitude,
-        'latitude': _latitude,
-        'timestamp': ServerValue.timestamp,
-      };
-      
-      // Add all sensor data
-      _sensorData.forEach((key, value) {
-        sensorEntry[key] = value;
-      });
-      
-      // Save to Firebase under 'sensors' node
-      await _database.child('sensors').child(measurementId).set(sensorEntry);
-      
-      Fluttertoast.showToast(
-        msg: "Data saved successfully!",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        backgroundColor: Colors.green,
-        textColor: Colors.white,
-      );
-      
-      _nameController.clear();
-    } catch (e, stackTrace) {
-        Fluttertoast.showToast(
-          msg: "Error detail: $e",
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-        );
-        print('Error saving data: $e');
-        print('Stack trace: $stackTrace');
-    } finally {
-      setState(() {
-        _isSaving = false;
-      });
-    }
+    // Save to Firebase under 'users/{userId}/sensors' node
+    await _database.child('users').child(userId).child('sensors').child(measurementId).set(sensorEntry);
+    
+    Fluttertoast.showToast(
+      msg: "Data saved successfully!",
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.green,
+      textColor: Colors.white,
+    );
+    
+    _nameController.clear();
+  } catch (e, stackTrace) {
+    // Error handling code...
+  } finally {
+    setState(() {
+      _isSaving = false;
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -418,12 +418,48 @@ class _HomePageState extends State<HomePage> {
                                 color: color,
                               ),
                             ),
+
+                            
                           ],
+                          
+                        ),
+                        
+                      ),
+                      
+                    );
+                    
+                  },
+                  
+                ),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                    );
-                  },
-                ),
+                      onPressed: () async {
+                        await _authService.signOut(); // Fungsi logout
+                        if (context.mounted) {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        }
+                      },
+                      icon: const Icon(Icons.logout, color: Colors.white),
+                      label: Text(
+                        'Logout',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+
                 
                 const SizedBox(height: 20),
                 

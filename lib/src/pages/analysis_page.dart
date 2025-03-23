@@ -6,9 +6,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:logging/logging.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math' as math;
 import 'ml_service.dart';
 import 'result_page.dart';
+import 'auth_service.dart';
 import 'main_page.dart';
 
 
@@ -23,6 +25,7 @@ class AnalyzePage extends StatefulWidget {
 class _AnalyzePageState extends State<AnalyzePage> {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
   final _logger = Logger('AnalysisPage');
+  final AuthService _authService = AuthService();
   bool _isLoading = true;
   bool _hasError = false;
 
@@ -73,32 +76,31 @@ class _AnalyzePageState extends State<AnalyzePage> {
   // Method to handle delete action permanently
   Future<void> _deleteSensorDataById(String id, BuildContext context) async {
     try {
-      // Cari data yang akan dihapus berdasarkan ID
-      final dataToDelete = _sensorData.firstWhere((data) => data['id'] == id);
+      String? userId = _authService.getCurrentUser()?.uid;
+      if (userId == null) throw Exception('User belum login');
 
-      // Ambil nama dari data yang akan dihapus
-      final name = dataToDelete['name'] ?? 'Unnamed';
+      DatabaseReference ref = _database.child('users').child(userId).child('sensors').child(id);
+      DataSnapshot snapshot = await ref.get();
 
-      // Hapus data dari database berdasarkan ID
-      await _database.child('sensors').child(id).remove();
+      if (!snapshot.exists) {
+        throw Exception('Data dengan ID $id tidak ditemukan.');
+      }
 
-      // Perbarui state lokal dengan menghapus data yang sesuai
+      await ref.remove();
+
       setState(() {
         _sensorData.removeWhere((data) => data['id'] == id);
       });
 
-      // Tampilkan pesan sukses dengan nama
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Data "$name" telah dihapus'),
+          content: Text('Data berhasil dihapus'),
           backgroundColor: Colors.green,
         ),
       );
 
-      // Auto-refresh data setelah penghapusan
       await _fetchSensorData();
     } catch (e) {
-      // Tampilkan pesan error jika terjadi kesalahan
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Gagal menghapus data: $e'),
@@ -107,6 +109,7 @@ class _AnalyzePageState extends State<AnalyzePage> {
       );
     }
   }
+
 
   // Fungsi untuk menentukan orientasi tiga titik
   int orientation(LatLng p, LatLng q, LatLng r) {
@@ -193,48 +196,124 @@ class _AnalyzePageState extends State<AnalyzePage> {
  
 
   Future<void> _fetchSensorData() async {
-    if (mounted) {
-      setState(() {
-        _isLoading = true;
-        _hasError = false;
-        _errorMessage = '';
-        _activePopup = null; // Reset active popup when fetching new data
-      });
+  if (!mounted) return;
+
+  // Mulai loading
+  setState(() {
+    _isLoading = true;
+    _hasError = false;
+    _errorMessage = '';
+    _activePopup = null; // Reset active popup ketika mengambil data baru
+  });
+
+  try {
+    print('Mencoba mengambil data dari Firebase');
+
+    // Dapatkan ID user yang sedang login
+    String? userId = _authService.getCurrentUser()?.uid;
+
+    if (userId == null) {
+      throw Exception('User belum login');
     }
 
-    try {
-      print('Mencoba mengambil data dari Firebase');
+    // Coba ambil data dari path baru (users/$userId/sensors)
+    DatabaseReference userSensorRef = FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(userId)
+        .child('sensors');
 
-      DataSnapshot snapshot = await _database.child('sensors').get().timeout(
+    DataSnapshot snapshot = await userSensorRef.get().timeout(
+      const Duration(seconds: 15),
+      onTimeout: () => throw TimeoutException('Koneksi ke Firebase timeout'),
+    );
+
+    if (snapshot.exists && snapshot.value != null) {
+      print('Data ditemukan di path baru (users/$userId/sensors)');
+
+      // Proses data sensor
+      if (snapshot.value is Map) {
+        Map<dynamic, dynamic> values = snapshot.value as Map<dynamic, dynamic>;
+        print('Jumlah data sensor: ${values.length}');
+
+        _sensorData = [];
+        _locations = [];
+
+        values.forEach((key, value) {
+          try {
+            if (value is Map) {
+              Map<String, dynamic> data = {'id': key};
+              value.forEach((k, v) => data[k.toString()] = v);
+              _sensorData.add(data);
+
+              // Validasi dan tambahkan lokasi
+              if (data.containsKey('latitude') && data.containsKey('longitude')) {
+                try {
+                  double lat = double.parse(data['latitude'].toString());
+                  double lng = double.parse(data['longitude'].toString());
+
+                  if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                    _locations.add(LatLng(lat, lng));
+                    print('Lokasi ditambahkan: $lat, $lng');
+                  } else {
+                    print('Koordinat tidak valid untuk key: $key');
+                  }
+                } catch (e) {
+                  print('Error parsing koordinat: $e');
+                }
+              } else {
+                print('Data tidak memiliki koordinat latitude/longitude');
+              }
+            } else {
+              print('Data untuk key $key bukan Map: ${value.runtimeType}');
+            }
+          } catch (e) {
+            print('Error memproses data untuk key $key: $e');
+          }
+        });
+
+        // Hapus lokasi duplikat
+        _locations = _locations.toSet().toList();
+        print('Total data yang diproses: ${_sensorData.length}');
+        print('Total lokasi yang diekstrak: ${_locations.length}');
+      } else {
+        throw FormatException('Data di path "sensors" bukan Map: ${snapshot.value.runtimeType}');
+      }
+    } else {
+      print('Tidak ada data di path "users/$userId/sensors" atau data null');
+
+      // Fallback ke path lama (sensors)
+      print('Mencoba mengambil data dari path lama (sensors)');
+      DatabaseReference oldSensorRef = FirebaseDatabase.instance.ref().child('sensors');
+      DataSnapshot oldSnapshot = await oldSensorRef.get().timeout(
         const Duration(seconds: 15),
         onTimeout: () => throw TimeoutException('Koneksi ke Firebase timeout'),
       );
 
-      print('Snapshot diterima: ${snapshot.exists}');
+      if (oldSnapshot.exists && oldSnapshot.value != null) {
+        print('Data ditemukan di path lama (sensors)');
 
-      if (snapshot.exists && snapshot.value != null) {
-        _sensorData = [];
-        _locations = [];
-
-        if (snapshot.value is Map) {
-          Map<dynamic, dynamic> values = snapshot.value as Map<dynamic, dynamic>;
+        // Proses data sensor dari path lama
+        if (oldSnapshot.value is Map) {
+          Map<dynamic, dynamic> values = oldSnapshot.value as Map<dynamic, dynamic>;
           print('Jumlah data sensor: ${values.length}');
+
+          _sensorData = [];
+          _locations = [];
 
           values.forEach((key, value) {
             try {
               if (value is Map) {
                 Map<String, dynamic> data = {'id': key};
-
                 value.forEach((k, v) => data[k.toString()] = v);
                 _sensorData.add(data);
 
-                // Validasi data lokasi
+                // Validasi dan tambahkan lokasi
                 if (data.containsKey('latitude') && data.containsKey('longitude')) {
                   try {
                     double lat = double.parse(data['latitude'].toString());
                     double lng = double.parse(data['longitude'].toString());
 
-                    // Validasi rentang koordinat
                     if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
                       _locations.add(LatLng(lat, lng));
                       print('Lokasi ditambahkan: $lat, $lng');
@@ -257,58 +336,62 @@ class _AnalyzePageState extends State<AnalyzePage> {
 
           // Hapus lokasi duplikat
           _locations = _locations.toSet().toList();
-
           print('Total data yang diproses: ${_sensorData.length}');
           print('Total lokasi yang diekstrak: ${_locations.length}');
         } else {
-          throw FormatException('Data di path "sensors" bukan Map: ${snapshot.value.runtimeType}');
+          throw FormatException('Data di path "sensors" bukan Map: ${oldSnapshot.value.runtimeType}');
         }
       } else {
-        print('Tidak ada data di path "sensors" atau data null');
-      }
-
-      if (_sensorData.isNotEmpty) {
-        _calculateAverages();
-      } else {
-        _averageData = {
-          'Nitrogen': 0,
-          'Phosphorus': 0,
-          'Potassium': 0,
-          'pH': 0,
-          'EC': 0,
-          'Temperature': 0,
-          'Humidity': 0,
-        };
-      }
-
-      if (_locations.length >= 3) {
-        _convexHull = _createConvexHull(List.from(_locations));
-        print('Convex Hull created with ${_convexHull.length} points');
-      } else {
-        _convexHull = _locations;
-        print('Not enough points for convex hull, using original locations');
-      }
-    } catch (e, stackTrace) {
-      print('Error saat mengambil data: $e');
-      print('Stack trace: $stackTrace');
-
-      _hasError = true;
-
-      if (e is TimeoutException) {
-        _errorMessage = 'Koneksi ke database timeout. Periksa koneksi internet Anda dan coba lagi.';
-      } else if (e is FirebaseException) {
-        _errorMessage = 'Error Firebase: ${e.message}';
-      } else {
-        _errorMessage = 'Terjadi kesalahan: $e';
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        print('Tidak ada data di path lama "sensors" atau data null');
       }
     }
+
+    // Hitung rata-rata jika ada data sensor
+    if (_sensorData.isNotEmpty) {
+      _calculateAverages();
+    } else {
+      _averageData = {
+        'Nitrogen': 0,
+        'Phosphorus': 0,
+        'Potassium': 0,
+        'pH': 0,
+        'EC': 0,
+        'Temperature': 0,
+        'Humidity': 0,
+      };
+    }
+
+    // Update convex hull
+    if (_locations.length >= 3) {
+      _convexHull = _createConvexHull(List.from(_locations));
+      print('Convex Hull created with ${_convexHull.length} points');
+    } else {
+      _convexHull = _locations;
+      print('Not enough points for convex hull, using original locations');
+    }
+  } catch (e, stackTrace) {
+    print('Error saat mengambil data: $e');
+    print('Stack trace: $stackTrace');
+
+    _hasError = true;
+
+    if (e is TimeoutException) {
+      _errorMessage = 'Koneksi ke database timeout. Periksa koneksi internet Anda dan coba lagi.';
+    } else if (e is FirebaseException) {
+      _errorMessage = 'Error Firebase: ${e.message}';
+    } else if (e is Exception && e.toString().contains('User belum login')) {
+      _errorMessage = 'Anda belum login. Silakan login terlebih dahulu.';
+    } else {
+      _errorMessage = 'Terjadi kesalahan: $e';
+    }
+  } finally {
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
+}
 
   void _onTapMarker(int index) {
     setState(() {

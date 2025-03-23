@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'src/pages/splash_screen.dart';
+import 'src/pages/login_page.dart'; // Import halaman login
+import 'src/pages/home_page.dart'; // Import halaman home
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -17,10 +18,8 @@ void main() async {
     firebaseInitialized = true;
   } catch (error) {
     print('Gagal menginisialisasi Firebase default: $error');
-    // Lanjutkan aplikasi meskipun Firebase gagal
   }
   
-  // Hanya mencoba inisialisasi Firebase kedua jika yang pertama berhasil
   if (firebaseInitialized) {
     try {
       await Firebase.initializeApp(
@@ -36,8 +35,7 @@ void main() async {
       }
     }
   }
-  
-  // Jalankan aplikasi
+
   runApp(const MyApp());
 }
 
@@ -46,9 +44,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SplashScreen(),
+      initialRoute: '/splash',  // Rute awal
+      routes: {
+        '/splash': (context) => const SplashScreen(),
+        '/login': (context) => const LoginPage(),  // Tambahkan halaman login
+        '/home': (context) => const HomePage(),    // Tambahkan halaman home
+      },
     );
   }
 }
