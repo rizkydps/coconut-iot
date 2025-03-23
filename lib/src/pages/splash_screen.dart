@@ -78,9 +78,9 @@ class _SplashScreenState extends State<SplashScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                smallLogo(60, 60), 
+                smallLogo(70, 70), 
                 const SizedBox(width: 20), 
-                smallLogo2(70, 70),
+                smallLogo2(110, 110),
               ],
             ),
           ),
@@ -127,22 +127,23 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
         children: const [
           TextSpan(
-            text: 'IOT Project ',
+            text: 'Coal Co-Assistance ',
             style: TextStyle(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w400,
             ),
           ),
           TextSpan(
-            text: 'Based with \n ',
+            text: 'Nutrient with\n ',
             style: TextStyle(
-              color: Color(0xFFFE9879),
-              fontWeight: FontWeight.w800,
+              
+              fontWeight: FontWeight.w400,
             ),
           ),
           TextSpan(
-            text: 'AI ',
+            text: 'Artificial Intelligence',
             style: TextStyle(
-              fontWeight: FontWeight.w800,
+              color: Colors.green,
+              fontWeight: FontWeight.w400,
             ),
           ),
         ],

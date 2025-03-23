@@ -9,7 +9,9 @@
     <application
         android:label="Coconut IOT"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true"
+        android:hardwareAccelerated="false">
 
         <activity
             android:name=".MainActivity"

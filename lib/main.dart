@@ -6,32 +6,37 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Inisialisasi Firebase dengan nama khusus
+  
+  bool firebaseInitialized = false;
+  
   try {
     await Firebase.initializeApp(
-      name: 'coconut', // Berikan nama unik untuk instance Firebase
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    print('Firebase berhasil diinisialisasi dengan nama: coconut');
+    print('Firebase default berhasil diinisialisasi');
+    firebaseInitialized = true;
   } catch (error) {
-    print('Gagal menginisialisasi Firebase: $error');
-    return; // Hentikan eksekusi jika Firebase gagal diinisialisasi
+    print('Gagal menginisialisasi Firebase default: $error');
+    // Lanjutkan aplikasi meskipun Firebase gagal
   }
-
-  // Tes koneksi ke Firebase Realtime Database
-  try {
-    final DatabaseReference ref = FirebaseDatabase.instance.ref('test');
-    await ref.set({
-      'connection': 'success',
-      'timestamp': ServerValue.timestamp,
-    });
-    print('Tes koneksi Firebase berhasil');
-  } catch (error, stackTrace) {
-    print('Error saat menguji koneksi Firebase: $error');
-    print('Stack trace: $stackTrace');
+  
+  // Hanya mencoba inisialisasi Firebase kedua jika yang pertama berhasil
+  if (firebaseInitialized) {
+    try {
+      await Firebase.initializeApp(
+        name: 'coconut',
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      print('Firebase berhasil diinisialisasi dengan nama: coconut');
+    } catch (e) {
+      if (e.toString().contains('duplicate app')) {
+        print('Instance Firebase coconut sudah ada');
+      } else {
+        print('Gagal menginisialisasi Firebase coconut: $e');
+      }
+    }
   }
-
+  
   // Jalankan aplikasi
   runApp(const MyApp());
 }

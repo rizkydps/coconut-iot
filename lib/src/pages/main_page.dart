@@ -107,7 +107,7 @@ class MainPageState extends State<MainPage> {
         title: Row(
           children: [
             Image.asset(
-              'assets/coco.png', // Ensure you have this asset
+              'assets/big-logo.png', // Ensure you have this asset
               height: 40,
               errorBuilder: (context, error, stackTrace) {
                 return const Icon(Icons.eco, color: Colors.green, size: 40);
@@ -115,7 +115,7 @@ class MainPageState extends State<MainPage> {
             ),
             const SizedBox(width: 10),
             Text(
-              'COCONUUT',
+              'COCONUT',
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
