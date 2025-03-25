@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'home_page.dart';
 import 'analysis_page.dart';
 import 'result_page.dart';
+import 'ml_service.dart';
+
 import 'dart:async';
 
 class MainPage extends StatefulWidget {
@@ -23,6 +25,7 @@ class MainPageState extends State<MainPage> {
   Map<String, double> _soilParameters = {};
   bool _isLoading = false;
   bool _isButtonClicked = false;
+  String? _errorMessage;
 
   // Declare the pages list but initialize it later
   late List<Widget> _pages;
@@ -39,9 +42,10 @@ class MainPageState extends State<MainPage> {
       const HomePage(),
       const AnalyzePage(),
       ResultPage(
-        recommendations: _recommendations,
+        initialRecommendations: _recommendations,
         soilParameters: _soilParameters,
         isLoading: _isLoading,
+        errorMessage: _errorMessage,
         isButtonClicked: _isButtonClicked,
       ),
     ];
@@ -76,14 +80,15 @@ class MainPageState extends State<MainPage> {
       _recommendations = recommendations;
       _soilParameters = soilParameters;
       _isLoading = isLoading;
+      _errorMessage = errorMessage;
       _isButtonClicked = isButtonClicked;
 
       // Update ResultPage in _pages list
       _pages[2] = ResultPage(
-        recommendations: _recommendations,
+        initialRecommendations: _recommendations,
         soilParameters: _soilParameters,
         isLoading: _isLoading,
-        errorMessage: errorMessage,
+        errorMessage: _errorMessage,
         isButtonClicked: _isButtonClicked,
       );
     });
@@ -107,7 +112,7 @@ class MainPageState extends State<MainPage> {
         title: Row(
           children: [
             Image.asset(
-              'assets/big-logo.png', // Ensure you have this asset
+              'assets/big-logo.png',
               height: 40,
               errorBuilder: (context, error, stackTrace) {
                 return const Icon(Icons.eco, color: Colors.green, size: 40);
@@ -173,7 +178,7 @@ class MainPageState extends State<MainPage> {
             ],
           ),
         ),
-      ),  
+      ),
     );
   }
 

@@ -501,10 +501,12 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           _deviceStatus = isDeviceActive;
         });
-      } else {
+      }
+      else {
         print('Failed to fetch device status: ${response.statusCode}');
       }
-    } catch (e) {
+    }
+    catch (e) {
       print('Error fetching device status: $e');
     }
   }

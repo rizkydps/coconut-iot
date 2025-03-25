@@ -1,3 +1,4 @@
+//analysis_page.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -1180,7 +1181,7 @@ Widget build(BuildContext context) {
                           children: [
                             // Map section
                             Text(
-                              'Lokasi Sample',
+                              'Titik Lokasi',
                               style: GoogleFonts.poppins(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -1231,7 +1232,7 @@ Widget build(BuildContext context) {
                             
                             // Recorded measurements
                             Text(
-                              'Sample Tersimpan',
+                              'Data Tersimpan',
                               style: GoogleFonts.poppins(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,

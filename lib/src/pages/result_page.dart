@@ -1,8 +1,9 @@
+// result_page
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'analysis_page.dart';
+import 'ml_service.dart';
 import 'auth_service.dart';
-
 
 
 class PlantRecommendationResult {
@@ -11,7 +12,7 @@ class PlantRecommendationResult {
   final int compatibilityScore;
   final String reasons;
   final String careTips;
-  final String? imageUrl; // Optional image URL
+  final String? imageUrl;
 
   PlantRecommendationResult({
     required this.plantName,
@@ -34,25 +35,48 @@ class PlantRecommendationResult {
   }
 }
 
-class ResultPage extends StatelessWidget {
-  final List<PlantRecommendationResult> recommendations;
+class ResultPage extends StatefulWidget {
+  final List<PlantRecommendationResult> initialRecommendations;
   final Map<String, double> soilParameters;
   final bool isLoading;
   final String? errorMessage;
   final bool isButtonClicked;
+  final Function(String, Map<String, double>)? onPlantSearch;
 
   const ResultPage({
     Key? key,
-    required this.recommendations,
+    required this.initialRecommendations,
     required this.soilParameters,
     this.isLoading = false,
     this.errorMessage,
     this.isButtonClicked = false,
+    this.onPlantSearch,
   }) : super(key: key);
 
+  @override
+  _ResultPageState createState() => _ResultPageState();
+}
+
+class _ResultPageState extends State<ResultPage> {
+  late List<PlantRecommendationResult> recommendations;
+  late Map<String, double> soilParameters;
+  late bool isLoading;
+  late String? errorMessage;
+  late bool isButtonClicked;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize state with widget properties
+    recommendations = widget.initialRecommendations;
+    soilParameters = widget.soilParameters;
+    isLoading = widget.isLoading;
+    errorMessage = widget.errorMessage;
+    isButtonClicked = widget.isButtonClicked;
+  }
 
 
-   @override
+  @override
   Widget build(BuildContext context) {
     // Check if no data is available
     final bool noDataAvailable = recommendations.isEmpty && soilParameters.isEmpty;
@@ -135,19 +159,19 @@ class ResultPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-              // ElevatedButton.icon(
-              //   onPressed: () => Navigator.push(
-              //     context,
-              //     MaterialPageRoute(builder: (context) => const AnalyzePage()),
-              //   ),
-              //   icon: const Icon(Icons.analytics),
-              //   label: const Text('Go to Analysis'),
-              //   style: ElevatedButton.styleFrom(
-              //     foregroundColor: Colors.white,
-              //     backgroundColor: Colors.blue,
-              //     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              //   ),
-              // ),
+            // ElevatedButton.icon(
+            //   onPressed: () => Navigator.push(
+            //     context,
+            //     MaterialPageRoute(builder: (context) => const AnalyzePage()),
+            //   ),
+            //   icon: const Icon(Icons.analytics),
+            //   label: const Text('Go to Analysis'),
+            //   style: ElevatedButton.styleFrom(
+            //     foregroundColor: Colors.white,
+            //     backgroundColor: Colors.blue,
+            //     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            //   ),
+            // ),
 
           ],
         ),
@@ -205,7 +229,7 @@ class ResultPage extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          
+
         ),
         body: body,
       );
@@ -217,7 +241,7 @@ class ResultPage extends StatelessWidget {
 
   Widget _buildResultsView(BuildContext context) {
     return SingleChildScrollView(
-      child: Padding( 
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,10 +311,10 @@ class ResultPage extends StatelessWidget {
                         String unit = '';
                         if (entry.key == 'Temperature') {
                           unit = '°C';
-                        } else if (entry.key == 'Humidity' || 
-                                 entry.key == 'Nitrogen' || 
-                                 entry.key == 'Phosphorus' || 
-                                 entry.key == 'Potassium') unit = '%';
+                        } else if (entry.key == 'Humidity' ||
+                            entry.key == 'Nitrogen' ||
+                            entry.key == 'Phosphorus' ||
+                            entry.key == 'Potassium') unit = '%';
                         else if (entry.key == 'EC') unit = 'mS/cm';
 
                         return Chip(
@@ -317,12 +341,15 @@ class ResultPage extends StatelessWidget {
                         );
                       }).toList(),
                     ),
+
+                    const SizedBox(height: 24),
+                    _buildManualPlantSearch(context),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Recommendations Title
             Row(
               children: [
@@ -351,7 +378,7 @@ class ResultPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Plant Recommendations
             ListView.builder(
               shrinkWrap: true,
@@ -471,6 +498,148 @@ class ResultPage extends StatelessWidget {
     );
   }
 
+  // Modify the _buildManualPlantSearch method in your existing ResultPage class
+
+  Widget _buildManualPlantSearch(BuildContext context) {
+    final TextEditingController _searchController = TextEditingController();
+
+    return StatefulBuilder(
+      builder: (BuildContext context, StateSetter setState) {
+        return Card(
+          color: const Color(0xFF2A2D3E),
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.search, color: Colors.blue, size: 24),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Cari Tanaman Spesifik',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _searchController,
+                  style: GoogleFonts.poppins(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Masukkan nama tanaman...',
+                    hintStyle: GoogleFonts.poppins(color: Colors.white70),
+                    filled: true,
+                    fillColor: const Color(0xFF3A3D4E),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.search, color: Colors.blue),
+                      onPressed: () async {
+                        if (_searchController.text.trim().isEmpty) return;
+
+                        FocusScope.of(context).unfocus();
+                        _showAnalyzingDialog(context);
+
+                        try {
+                          // Get the OpenRouterService instance
+                          final openRouterService = OpenRouterService(
+                              apiKey: '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'
+                          );
+
+                          // Call the API with the plant name and soil parameters
+                          final response = await openRouterService.getSpecificPlantRecommendation(
+                              _searchController.text.trim(),
+                              soilParameters
+                          );
+
+                          // Parse the response
+                          final List<PlantRecommendationResult> specificRecommendations = [];
+                          if (response.containsKey('recommendations') && response['recommendations'] is List) {
+                            for (var item in response['recommendations']) {
+                              specificRecommendations.add(PlantRecommendationResult.fromJson(item));
+                            }
+                          }
+
+                          // Update the UI with specific recommendations
+                          if (context.mounted) {
+                            Navigator.of(context).pop(); // Close dialog
+
+                            // Use setState to update recommendations
+                            setState(() {
+                              recommendations = specificRecommendations;
+                            });
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            Navigator.of(context).pop(); // Close dialog
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error: ${e.toString()}'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Masukkan nama tanaman untuk memeriksa kompatibilitas dengan tanah Anda',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAnalyzingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2D3E),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 20),
+              Text(
+                'Menganalisis tanaman...',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildInfoSection(String title, String content, IconData icon, Color color) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -502,7 +671,7 @@ class ResultPage extends StatelessWidget {
   }
 
 
-  
+
   Color _getScoreColor(int score) {
     if (score >= 80) return Colors.green;
     if (score >= 60) return Colors.amber;
