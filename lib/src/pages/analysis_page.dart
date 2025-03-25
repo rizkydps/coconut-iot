@@ -75,6 +75,43 @@ class _AnalyzePageState extends State<AnalyzePage> {
   // Method to handle delete action
   // Method to handle delete action permanently
   Future<void> _deleteSensorDataById(String id, BuildContext context) async {
+    // Tampilkan dialog loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2D3E),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Menghapus Data',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Mohon tunggu sementara data sedang dihapus',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
     try {
       String? userId = _authService.getCurrentUser()?.uid;
       if (userId == null) throw Exception('User belum login');
@@ -83,7 +120,61 @@ class _AnalyzePageState extends State<AnalyzePage> {
       DataSnapshot snapshot = await ref.get();
 
       if (!snapshot.exists) {
-        throw Exception('Data dengan ID $id tidak ditemukan.');
+        // Tutup dialog loading
+        Navigator.of(context).pop();
+
+        // Tampilkan dialog error
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF2A2D3E),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error,
+                    color: Colors.red,
+                    size: 80,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Gagal Menghapus',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Data dengan ID $id tidak ditemukan.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Tutup dialog error
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                    child: Text(
+                      'Tutup',
+                      style: GoogleFonts.inter(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+        return;
       }
 
       await ref.remove();
@@ -92,20 +183,116 @@ class _AnalyzePageState extends State<AnalyzePage> {
         _sensorData.removeWhere((data) => data['id'] == id);
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Data berhasil dihapus'),
-          backgroundColor: Colors.green,
-        ),
+      // Tutup dialog loading
+      Navigator.of(context).pop();
+
+      // Tampilkan dialog sukses
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF2A2D3E),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 80,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Data Berhasil Dihapus',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Data sensor telah berhasil dihapus.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Tutup dialog sukses
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                  ),
+                  child: Text(
+                    'OK',
+                    style: GoogleFonts.inter(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       );
 
       await _fetchSensorData();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal menghapus data: $e'),
-          backgroundColor: Colors.red,
-        ),
+      // Tutup dialog loading
+      Navigator.of(context).pop();
+
+      // Tampilkan dialog error
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF2A2D3E),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.error,
+                  color: Colors.red,
+                  size: 80,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Gagal Menghapus',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Gagal menghapus data: $e',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Tutup dialog error
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                  ),
+                  child: Text(
+                    'Coba Lagi',
+                    style: GoogleFonts.inter(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       );
     }
   }
@@ -590,9 +777,106 @@ class _AnalyzePageState extends State<AnalyzePage> {
     });
   }
 
-  Future<void> _resetData() async {
+  Future<void> _resetData(BuildContext context) async {
+    // Tampilkan dialog loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2D3E),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Menghapus Semua Data',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Mohon tunggu sementara semua data sedang dihapus',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
     try {
-      await _database.child('sensors').remove();
+      String? userId = _authService.getCurrentUser ()?.uid;
+      if (userId == null) throw Exception('User  belum login');
+
+      // Delete the user's sensors data
+      await _database.child('users').child(userId).child('sensors').remove();
+
+      // Tutup dialog loading
+      Navigator.of(context).pop();
+
+      // Tampilkan dialog sukses
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF2A2D3E),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 80,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Data Berhasil Dihapus',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Semua data telah dihapus',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Tutup dialog sukses
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                  ),
+                  child: Text(
+                    'OK',
+                    style: GoogleFonts.inter(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+
       setState(() {
         _sensorData = [];
         _averageData = {
@@ -606,18 +890,60 @@ class _AnalyzePageState extends State<AnalyzePage> {
         };
         _locations = [];
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Semua data telah dihapus'),
-          backgroundColor: Colors.green,
-        ),
-      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal menghapus data: $e'),
-          backgroundColor: Colors.red,
-        ),
+      // Tutup dialog loading
+      Navigator.of(context).pop();
+
+      // Tampilkan dialog error
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF2A2D3E),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.error,
+                  color: Colors.red,
+                  size: 80,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Gagal Menghapus Data',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Gagal menghapus data: $e',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Tutup dialog error
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                  ),
+                  child: Text(
+                    'Coba Lagi',
+                    style: GoogleFonts.inter(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       );
     }
   }
@@ -751,7 +1077,7 @@ Widget build(BuildContext context) {
         ),
         IconButton(
           icon: const Icon(Icons.delete, color: Colors.red),
-          onPressed: _resetData,
+          onPressed: () => _resetData(context),  // Fixed this line
           tooltip: 'Reset Data',
         ),
       ],

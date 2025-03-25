@@ -249,15 +249,105 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _performSave(String name) async {
-    setState(() {
-      _isSaving = true;
-    });
+    // Use the current context
+    BuildContext context = this.context;
+
+    // Tampilkan dialog loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2D3E),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Menyimpan Data',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Mohon tunggu sementara data sedang disimpan',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
 
     try {
       String? userId = _authService.getCurrentUser()?.uid;
 
       if (userId == null) {
-        throw Exception("No user is logged in");
+        // Tutup dialog loading
+        Navigator.of(context).pop();
+
+        // Tampilkan dialog error
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF2A2D3E),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error,
+                    color: Colors.red,
+                    size: 80,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Gagal Menyimpan',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Tidak ada pengguna yang login',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Tutup dialog error
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                    child: Text(
+                      'Tutup',
+                      style: GoogleFonts.inter(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+        return;
       }
 
       String measurementId = _uuid.v4();
@@ -276,28 +366,118 @@ class _HomePageState extends State<HomePage> {
 
       await _database.child('users').child(userId).child('sensors').child(measurementId).set(sensorEntry);
 
-      Fluttertoast.showToast(
-        msg: "Data saved successfully!",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        backgroundColor: Colors.green,
-        textColor: Colors.white,
+      // Tutup dialog loading
+      Navigator.of(context).pop();
+
+      // Tampilkan dialog sukses
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF2A2D3E),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 80,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Data Tersimpan',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Data berhasil disimpan!',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Tutup dialog sukses
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                  ),
+                  child: Text(
+                    'OK',
+                    style: GoogleFonts.inter(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       );
 
       _nameController.clear();
     } catch (e) {
-      Fluttertoast.showToast(
-        msg: "Failed to save data",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
+      // Tutup dialog loading
+      Navigator.of(context).pop();
+
+      // Tampilkan dialog error
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF2A2D3E),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.error,
+                  color: Colors.red,
+                  size: 80,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Gagal Menyimpan',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Gagal menyimpan data: $e',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Tutup dialog error
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                  ),
+                  child: Text(
+                    'Coba Lagi',
+                    style: GoogleFonts.inter(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       );
       print('Save Error: $e');
-    } finally {
-      setState(() {
-        _isSaving = false;
-      });
     }
   }
 

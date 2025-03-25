@@ -420,10 +420,10 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a password';
+                    return 'Silakan masukkan password Anda';
                   }
                   if (value.length < 6) {
-                    return 'Password must be at least 6 characters';
+                    return 'Password harus terdiri dari minimal 6 karakter.';
                   }
                   return null;
                 },
@@ -505,15 +505,15 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please confirm your password';
+                    return 'Harap konfirmasi password anda';
                   }
                   if (value != passController.text) {
-                    return 'Passwords do not match';
+                    return 'Password tidak sesuai, harap cek kembali';
                   }
                   return null;
                 },
                 decoration: InputDecoration(
-                    hintText: 'Confirm password',
+                    hintText: 'Konfirmasi password',
                     hintStyle: GoogleFonts.inter(
                       fontSize: 14.0,
                       color: Colors.white70,
@@ -592,7 +592,7 @@ class _RegisterPageState extends State<RegisterPage> {
               });
             },
             child: Text(
-              'I agree to the terms and conditions and privacy policy',
+              'Saya setuju dengan syarat dan ketentuan serta kebijakan privasi',
               style: GoogleFonts.inter(
                 fontSize: 14.0,
                 color: Colors.white,
@@ -616,7 +616,7 @@ class _RegisterPageState extends State<RegisterPage> {
           color: _termsAccepted ? const Color.fromRGBO(76, 175, 80, 1) : Colors.grey,
         ),
         child: Text(
-          'Create Account',
+          'Buat Akun',
           style: GoogleFonts.inter(
             fontSize: 16.0,
             color: Colors.white,
@@ -665,7 +665,7 @@ class _RegisterPageState extends State<RegisterPage> {
       // Check if terms are accepted
       if (!_termsAccepted) {
         setState(() {
-          _errorMessage = 'You must accept the terms and conditions';
+          _errorMessage = 'Anda harus menyetujui syarat dan ketentuan"';
         });
         return;
       }
@@ -696,26 +696,26 @@ class _RegisterPageState extends State<RegisterPage> {
           String message;
           switch (e.code) {
             case 'email-already-in-use':
-              message = 'An account already exists for that email.';
+              message = 'Email ini sudah terdaftar.';
               break;
             case 'invalid-email':
-              message = 'That email address is not valid.';
+              message = 'Alamat email tidak valid.';
               break;
             case 'operation-not-allowed':
-              message = 'Email/password accounts are not enabled.';
+              message = 'Login email/password dinonaktifkan. Gunakan metode lain yang tersedia.';
               break;
             case 'weak-password':
-              message = 'The password provided is too weak.';
+              message = 'Password yang dibuat terlalu lemah.';
               break;
             default:
-              message = 'An error occurred. Please try again.';
+              message = 'Terjadi kesalahan. Silakan coba lagi.';
           }
           setState(() {
             _errorMessage = message;
           });
         } catch (e) {
           setState(() {
-            _errorMessage = 'An unexpected error occurred. Please try again.';
+            _errorMessage = 'Terjadi kesalahan tak terduga. Silakan coba lagi.';
           });
         } finally {
           setState(() {
@@ -810,7 +810,7 @@ class _RegisterPageState extends State<RegisterPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Text(
-          "Already have an account?",
+          "Sudah punya akun?",
           style: GoogleFonts.inter(
             fontSize: 14.0,
             color: Colors.white,
@@ -825,7 +825,7 @@ class _RegisterPageState extends State<RegisterPage> {
             );
           },
           child: Text(
-            "Sign In",
+            "Login",
             style: GoogleFonts.inter(
               fontSize: 14.0,
               color: Colors.orangeAccent,

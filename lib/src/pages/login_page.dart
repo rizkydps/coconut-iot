@@ -4,7 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'register_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'auth_service.dart'; 
+import 'auth_service.dart';
+import 'reset_password_page.dart';
 import 'main_page.dart'; 
 
 
@@ -65,12 +66,12 @@ class _LoginPageState extends State<LoginPage> {
         );
       } else {
         setState(() {
-          _errorMessage = "Login failed. Please check your credentials.";
+          _errorMessage = "Login gagal. Harap periksa email dan password Anda, lalu coba lagi.";
         });
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
-        _errorMessage = e.message ?? "An error occurred during login.";
+        _errorMessage = e.message ?? "Terjadi kesalahan tak terduga. Silakan coba lagi.";
       });
     } finally {
       setState(() {
@@ -385,55 +386,78 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget buildRemember(Size size) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween, // Change to spaceBetween
+      crossAxisAlignment: CrossAxisAlignment.center, // Align items vertically center
       children: <Widget>[
-        GestureDetector(
-          onTap: () async {
-            setState(() {
-              _rememberMe = !_rememberMe;
-            });
-            await _saveRememberMe(_rememberMe); // Simpan state ke SharedPreferences
-          },
-          child: Container(
-            alignment: Alignment.center,
-            width: 17.0,
-            height: 17.0,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4.0),
-              gradient: _rememberMe
-                  ? const LinearGradient(
-                      begin: Alignment(5.65, -1.0),
-                      end: Alignment(-1.0, 1.94),
-                      colors: [Color(0xFF00AD8F), Color(0xFF7BF4DF)],
-                    )
-                  : null,
-              border: _rememberMe
-                  ? null
-                  : Border.all(color: Colors.white, width: 1.0),
-            ),
-            child: _rememberMe
-                ? SvgPicture.string(
-                    '<svg viewBox="47.0 470.0 7.0 4.0" ><path transform="translate(47.0, 470.0)" d="M 0 1.5 L 2.692307710647583 4 L 7 0" fill="none" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /></svg>',
-                    width: 7.0,
-                    height: 4.0,
+        // Remember Me section
+        Row(
+          children: [
+            GestureDetector(
+              onTap: () async {
+                setState(() {
+                  _rememberMe = !_rememberMe;
+                });
+                await _saveRememberMe(_rememberMe);
+              },
+              child: Container(
+                alignment: Alignment.center,
+                width: 17.0,
+                height: 17.0,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4.0),
+                  gradient: _rememberMe
+                      ? const LinearGradient(
+                    begin: Alignment(5.65, -1.0),
+                    end: Alignment(-1.0, 1.94),
+                    colors: [Color(0xFF00AD8F), Color(0xFF7BF4DF)],
                   )
-                : null,
-          ),
+                      : null,
+                  border: _rememberMe
+                      ? null
+                      : Border.all(color: Colors.white, width: 1.0),
+                ),
+                child: _rememberMe
+                    ? SvgPicture.string(
+                  '<svg viewBox="47.0 470.0 7.0 4.0" ><path transform="translate(47.0, 470.0)" d="M 0 1.5 L 2.692307710647583 4 L 7 0" fill="none" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /></svg>',
+                  width: 7.0,
+                  height: 4.0,
+                )
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 8), // Reduced spacing
+            GestureDetector(
+              onTap: () async {
+                setState(() {
+                  _rememberMe = !_rememberMe;
+                });
+                await _saveRememberMe(_rememberMe);
+              },
+              child: Text(
+                'Remember me',
+                style: GoogleFonts.inter(
+                  fontSize: 14.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 16),
+
+        // Forgot Password link
         GestureDetector(
-          onTap: () async {
-            setState(() {
-              _rememberMe = !_rememberMe;
-            });
-            await _saveRememberMe(_rememberMe); // Simpan state ke SharedPreferences
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ResetPasswordPage()),
+            );
           },
           child: Text(
-            'Remember me',
+            'Forgot Password?',
             style: GoogleFonts.inter(
               fontSize: 14.0,
-              color: Colors.white,
+              color: Colors.orangeAccent,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -454,7 +478,7 @@ class _LoginPageState extends State<LoginPage> {
         child: _isLoading
             ? const CircularProgressIndicator(color: Colors.white)
             : Text(
-                'Sign in',
+                'Login',
                 style: GoogleFonts.inter(
                   fontSize: 16.0,
                   color: Colors.white,
@@ -463,6 +487,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
       ),
     );
+
   }
 
   Widget buildContinueText() {
@@ -543,7 +568,7 @@ class _LoginPageState extends State<LoginPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Text(
-          "Don't have an account? ",
+          "Belum punya akun? ",
           style: GoogleFonts.inter(
             fontSize: 14.0,
             color: Colors.white,
@@ -557,7 +582,7 @@ class _LoginPageState extends State<LoginPage> {
             );
           },
           child: Text(
-            "Sign Up",
+            "Daftar",
             style: GoogleFonts.inter(
               fontSize: 14.0,
               color: Colors.orangeAccent,
