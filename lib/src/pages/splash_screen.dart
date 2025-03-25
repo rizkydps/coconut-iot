@@ -80,7 +80,7 @@ class _SplashScreenState extends State<SplashScreen> {
               children: [
                 smallLogo(70, 70), 
                 const SizedBox(width: 20), 
-                smallLogo2(110, 110),
+                smallLogo2(120, 120),
               ],
             ),
           ),

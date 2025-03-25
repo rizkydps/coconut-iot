@@ -133,19 +133,19 @@ class ResultPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AnalyzePage()),
-                ),
-                icon: const Icon(Icons.analytics),
-                label: const Text('Go to Analysis'),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-              ),
+              // ElevatedButton.icon(
+              //   onPressed: () => Navigator.push(
+              //     context,
+              //     MaterialPageRoute(builder: (context) => const AnalyzePage()),
+              //   ),
+              //   icon: const Icon(Icons.analytics),
+              //   label: const Text('Go to Analysis'),
+              //   style: ElevatedButton.styleFrom(
+              //     foregroundColor: Colors.white,
+              //     backgroundColor: Colors.blue,
+              //     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              //   ),
+              // ),
 
           ],
         ),
