@@ -5,6 +5,11 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
+
+// Assuming you have an AuthService class
 import 'auth_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -15,35 +20,47 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  // Services and Controllers
   final AuthService _authService = AuthService();
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
   final TextEditingController _nameController = TextEditingController();
-  
+
+  // Utilities
   static const Uuid _uuid = Uuid();
-  
+
+  // State Variables
   bool _deviceStatus = false;
   bool _isSaving = false;
-  
-  // Sensor data - normally this would come from your IoT device
-  final Map<String, double> _sensorData = {
-    'Nitrogen': 10.4,
-    'Phosphorus': 10.4,
-    'Potassium': 10.2,
-    'pH': 10.5,
-    'EC': 10.2,
-    'Temperature': 10.3,
-    'Humidity': 10.7,
+  bool _isLoading = true;
 
+  // ThingsBoard API Configuration
+  static const String _tbApiUrl = 'http://iot.politanisamarinda.ac.id:8080';
+  static const String _deviceId = 'f6269e80-7fbc-11ef-b7a6-352fc94f82a8';
+  String _accessToken = 'p9RlhxzeH4SyFzyZOhQ5';
+
+  // Sensor data to be fetched from ThingsBoard
+  Map<String, double> _sensorData = {
+    'Nitrogen': 0.0,
+    'Phosphorus': 0.0,
+    'Potassium': 0.0,
+    'pH': 0.0,
+    'EC': 0.0,
+    'Temperature': 0.0,
+    'Humidity': 0.0,
   };
-  
+
   // Coordinates data
   String _latitude = '-7.7931';
   String _longitude = '110.3695';
+
+  // Error handling
+  String _errorMessage = '';
 
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
+    _loginAndFetchData();
   }
 
   @override
@@ -61,15 +78,15 @@ class _HomePageState extends State<HomePage> {
           return;
         }
       }
-      
+
       if (permission == LocationPermission.deniedForever) {
         return;
       }
 
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high
+          desiredAccuracy: LocationAccuracy.high
       );
-      
+
       setState(() {
         _latitude = position.latitude.toStringAsFixed(6);
         _longitude = position.longitude.toStringAsFixed(6);
@@ -79,14 +96,106 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _loginToThingsBoard() async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_tbApiUrl/api/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'username': 'imron@politanisamarinda.ac.id',
+          'password': 'politani123'
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final loginData = json.decode(response.body);
+        _accessToken = loginData['token'];
+        return;
+      }
+      throw Exception('Login failed');
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to login to ThingsBoard';
+      });
+      print('ThingsBoard Login Error: $e');
+      throw Exception('Could not log in to ThingsBoard');
+    }
+  }
+
+  Future<void> _fetchSensorData() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_tbApiUrl/api/plugins/telemetry/DEVICE/$_deviceId/values/timeseries?keys=conductivity,humidity,nitrogen,pH,phosporus,potassium,temperature'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Authorization': 'Bearer $_accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        setState(() {
+          _sensorData['Nitrogen'] = double.tryParse(data['nitrogen']?[0]?['value'] ?? '0.0') ?? 0.0;
+          _sensorData['Phosphorus'] = double.tryParse(data['phosporus']?[0]?['value'] ?? '0.0') ?? 0.0;
+          _sensorData['Potassium'] = double.tryParse(data['potassium']?[0]?['value'] ?? '0.0') ?? 0.0;
+          _sensorData['pH'] = double.tryParse(data['pH']?[0]?['value'] ?? '0.0') ?? 0.0;
+          _sensorData['EC'] = double.tryParse(data['conductivity']?[0]?['value'] ?? '0.0') ?? 0.0;
+          _sensorData['Temperature'] = double.tryParse(data['temperature']?[0]?['value'] ?? '0.0') ?? 0.0;
+          _sensorData['Humidity'] = double.tryParse(data['humidity']?[0]?['value'] ?? '0.0') ?? 0.0;
+
+          _isLoading = false;
+          _errorMessage = ''; // Clear any previous error
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Failed to fetch sensor data';
+          _isLoading = false;
+        });
+        throw Exception('Failed to fetch sensor data');
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error retrieving sensor data';
+        _isLoading = false;
+      });
+      print('Sensor Data Fetch Error: $e');
+    }
+  }
+
+  Future<void> _loginAndFetchData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = '';
+      });
+
+      await _loginToThingsBoard();
+      await _fetchDeviceStatus(); // Fetch device status
+      await _fetchSensorData();
+
+      // Set up periodic data refresh
+      Timer.periodic(const Duration(seconds: 10), (timer) {
+        _fetchDeviceStatus(); // Periodically update device status
+        _fetchSensorData();
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to initialize data';
+        _isLoading = false;
+      });
+      print('Login and Fetch Data Error: $e');
+    }
+  }
+
+
   Future<void> _saveSensorData() async {
-    // Show dialog to enter name for this measurement
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E2C),
         title: Text(
-          'Save Data  ',
+          'Save Data',
           style: GoogleFonts.poppins(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -140,72 +249,198 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _performSave(String name) async {
-  setState(() {
-    _isSaving = true;
-  });
-  
-  try {
-    // Get current user ID
-    String? userId = _authService.getCurrentUser()?.uid;
-    
-    if (userId == null) {
-      throw Exception("No user is logged in");
-    }
-    
-    // Generate a unique ID for this measurement
-    String measurementId = _uuid.v4();
-    
-    // Create data to save
-    Map<String, dynamic> sensorEntry = {
-      'id': measurementId,
-      'name': name,
-      'longitude': _longitude,
-      'latitude': _latitude,
-      'timestamp': ServerValue.timestamp,
-    };
-    
-    // Add all sensor data
-    _sensorData.forEach((key, value) {
-      sensorEntry[key] = value;
-    });
-    
-    // Save to Firebase under 'users/{userId}/sensors' node
-    await _database.child('users').child(userId).child('sensors').child(measurementId).set(sensorEntry);
-    
-    Fluttertoast.showToast(
-      msg: "Data saved successfully!",
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
-      backgroundColor: Colors.green,
-      textColor: Colors.white,
-    );
-    
-    _nameController.clear();
-  } catch (e, stackTrace) {
-    // Error handling code...
-  } finally {
     setState(() {
-      _isSaving = false;
+      _isSaving = true;
     });
+
+    try {
+      String? userId = _authService.getCurrentUser()?.uid;
+
+      if (userId == null) {
+        throw Exception("No user is logged in");
+      }
+
+      String measurementId = _uuid.v4();
+
+      Map<String, dynamic> sensorEntry = {
+        'id': measurementId,
+        'name': name,
+        'longitude': _longitude,
+        'latitude': _latitude,
+        'timestamp': ServerValue.timestamp,
+      };
+
+      _sensorData.forEach((key, value) {
+        sensorEntry[key] = value;
+      });
+
+      await _database.child('users').child(userId).child('sensors').child(measurementId).set(sensorEntry);
+
+      Fluttertoast.showToast(
+        msg: "Data saved successfully!",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+      );
+
+      _nameController.clear();
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg: "Failed to save data",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+      print('Save Error: $e');
+    } finally {
+      setState(() {
+        _isSaving = false;
+      });
+    }
   }
-}
+
+
+  Future<void> _fetchDeviceStatus() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_tbApiUrl/api/device/$_deviceId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Authorization': 'Bearer $_accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final deviceData = json.decode(response.body);
+
+        // Check the device's actual status
+        bool isDeviceActive = deviceData['additionalInfo']['active'] ?? false;
+
+        setState(() {
+          _deviceStatus = isDeviceActive;
+        });
+      } else {
+        print('Failed to fetch device status: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching device status: $e');
+    }
+  }
+
+  Future<void> _updateDeviceStatus(bool status) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_tbApiUrl/api/device/$_deviceId/credentials'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Authorization': 'Bearer $_accessToken',
+        },
+        body: json.encode({
+          'deviceId': _deviceId,
+          'additionalInfo': {
+            'active': status
+          }
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _deviceStatus = status;
+        });
+
+        Fluttertoast.showToast(
+          msg: status ? "Device Activated" : "Device Deactivated",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: status ? Colors.green : Colors.red,
+          textColor: Colors.white,
+        );
+      } else {
+        print('Failed to update device status: ${response.statusCode}');
+        Fluttertoast.showToast(
+          msg: "Failed to update device status",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+        );
+      }
+    } catch (e) {
+      print('Error updating device status: $e');
+      Fluttertoast.showToast(
+        msg: "Error updating device status",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
       backgroundColor: const Color(0xFF1E1E2C),
-      
+
       body: SafeArea(
         bottom: false,
-        child: SingleChildScrollView(
+        child: _isLoading
+            ? Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(
+                color: Colors.green,
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Fetching Sensor Data...',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        )
+            : _errorMessage.isNotEmpty
+            ? Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                color: Colors.red,
+                size: 60,
+              ),
+              SizedBox(height: 20),
+              Text(
+                _errorMessage,
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _loginAndFetchData,
+                child: Text('Retry'),
+              )
+            ],
+          ),
+        )
+            : SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with title
+                // Header
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: Text(
@@ -217,8 +452,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                
-                // Device status and location card
+
+                // Device Status and Location Card
                 Card(
                   color: const Color(0xFF2A2D3E),
                   elevation: 4,
@@ -244,9 +479,7 @@ class _HomePageState extends State<HomePage> {
                             Switch(
                               value: _deviceStatus,
                               onChanged: (value) {
-                                setState(() {
-                                  _deviceStatus = value;
-                                });
+                                _updateDeviceStatus(value); // Call method to update device status
                               },
                               activeColor: Colors.green,
                               inactiveThumbColor: Colors.red,
@@ -271,30 +504,28 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        // Add Save Button
+                        // Save Button
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color.fromRGBO(76, 175, 80, 1),
                               padding: const EdgeInsets.symmetric(vertical: 12),
-                              
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
                             onPressed: _isSaving ? null : _saveSensorData,
-                            icon: _isSaving 
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.save, color: Colors.white),
+                            icon: _isSaving
+                                ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                                : const Icon(Icons.save, color: Colors.white),
                             label: Text(
                               _isSaving ? 'Saving...' : 'Save Data',
                               style: GoogleFonts.poppins(
@@ -309,10 +540,10 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
-                // Section Title
+
+                // Sensor Data Section Title
                 Text(
                   'Data Sensor',
                   style: GoogleFonts.poppins(
@@ -321,9 +552,9 @@ class _HomePageState extends State<HomePage> {
                     color: Colors.white,
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Sensor Parameters Grid
                 GridView.builder(
                   shrinkWrap: true,
@@ -338,10 +569,10 @@ class _HomePageState extends State<HomePage> {
                   itemBuilder: (context, index) {
                     String key = _sensorData.keys.elementAt(index);
                     double value = _sensorData[key]!;
-                    
+
                     IconData icon;
                     Color color;
-                    
+
                     // Assign icon and color based on parameter
                     switch (key) {
                       case 'Nitrogen':
@@ -376,14 +607,17 @@ class _HomePageState extends State<HomePage> {
                         icon = Icons.sensors;
                         color = Colors.grey;
                     }
-                    
+
                     // Units for each parameter
                     String unit = '';
                     if (key == 'Temperature') {
                       unit = '°C';
-                    } else if (key == 'Humidity' || key == 'Nitrogen' || key == 'Phosphorus' || key == 'Potassium') unit = '%';
-                    else if (key == 'EC') unit = 'mS/cm';
-                    
+                    } else if (key == 'Humidity' || key == 'Nitrogen' || key == 'Phosphorus' || key == 'Potassium') {
+                      unit = '%';
+                    } else if (key == 'EC') {
+                      unit = 'mS/cm';
+                    }
+
                     return Card(
                       color: const Color(0xFF2A2D3E),
                       elevation: 4,
@@ -411,58 +645,49 @@ class _HomePageState extends State<HomePage> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '${value.toString()}$unit',
+                              '${value.toStringAsFixed(2)}$unit',
                               style: GoogleFonts.robotoMono(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 color: color,
                               ),
                             ),
-
-                            
                           ],
-                          
                         ),
-                        
                       ),
-                      
                     );
-                    
                   },
-                  
                 ),
 
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                // Logout Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      onPressed: () async {
-                        await _authService.signOut(); // Fungsi logout
-                        if (context.mounted) {
-                          Navigator.pushReplacementNamed(context, '/login');
-                        }
-                      },
-                      icon: const Icon(Icons.logout, color: Colors.white),
-                      label: Text(
-                        'Logout',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
+                    ),
+                    onPressed: () async {
+                      await _authService.signOut();
+                      if (context.mounted) {
+                        Navigator.pushReplacementNamed(context, '/login');
+                      }
+                    },
+                    icon: const Icon(Icons.logout, color: Colors.white),
+                    label: Text(
+                      'Logout',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
+                ),
 
-                
-                const SizedBox(height: 20),
-                
                 // Last updated section
                 Center(
                   child: Text(
@@ -473,8 +698,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                
-                // Add extra padding at the bottom to prevent content from being hidden by navigation bar
+
+                // Extra padding at bottom
                 const SizedBox(height: 80),
               ],
             ),
