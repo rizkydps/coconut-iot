@@ -17,19 +17,32 @@ class OpenRouterService {
       String prompt = '''
       Berdasarkan parameter tanah berikut, rekomendasikan tanaman yang paling cocok dan dapat tumbuh dengan baik:
       $soilDataString
+      Pastikan tanaman tersebut cocok untuk lahan pasca tambang dan iklim indonesia.
       Berikan respons JSON dengan struktur berikut:
       {
         "recommendations": [
           {
             "plant_name": "Nama Tanaman",
             "description": "Deskripsi singkat tentang tanaman",
-            "compatibility_score": 85,
+            "compatibility_score": 0-100,
             "reasons": "Mengapa tanaman ini cocok untuk parameter tanah yang diberikan",
             "care_tips": "Tips perawatan dasar untuk tanaman ini"
           }
         ]
       }
-      Berikan setidaknya 10 rekomendasi tanaman dengan skor kompatibilitas antara 0-100.
+      Distribusi tanaman:
+      - 5 tanaman pertanian (pangan/sayuran)
+      - 5 tanaman perkebunan (industri)
+
+      Kriteria:
+      1. Prioritaskan tanaman yang toleran dengan kondisi tanah marginal
+      2. Sesuaikan dengan iklim tropis Indonesia
+      3. Berikan compatibility score yang akurat
+      4. Sertakan alasan spesifik kenapa cocok untuk parameter tanah ini
+
+      Contoh tanaman yang diharapkan:
+      - Pertanian: Padi, cabai, jagung, kedelai, kacang tanah, singkong
+      - Perkebunan: Kelapa sawit, karet, kopi, cengkeh, jambu mete
       ''';
 
       final response = await http.post(
@@ -42,6 +55,8 @@ class OpenRouterService {
         },
         body: jsonEncode({
           'model': 'deepseek/deepseek-chat-v3-0324:free',
+          //'model': 'deepseek/deepseek-chat-v3-0324:free',
+
           'messages': [
             {'role': 'system', 'content': 'You are a plant and agriculture expert.'},
             {'role': 'user', 'content': prompt}
@@ -83,11 +98,11 @@ class OpenRouterService {
 
       // Create the prompt
       String prompt = '''
-    Saya ingin menanam $plantName. Berdasarkan parameter tanah berikut:
+    Saya ingin menanam $plantName. Berdasarkan parameter tanah berikut, rekomendasikan tanaman yang paling cocok dan dapat tumbuh dengan baik:
     $soilDataString
-    
+
     Bagaimana kompatibilitas tanaman ini dengan kondisi tanah saya?
-    Berikan analisis detail dan tips perawatan khusus untuk tanaman ini dalam kondisi tanah saya.
+    Pastikan tanaman tersebut cocok untuk lahan pasca tambang dan iklim indonesia.
     
     Berikan respons JSON dengan struktur berikut:
     {
@@ -95,15 +110,23 @@ class OpenRouterService {
         {
           "plant_name": "$plantName",
           "description": "Deskripsi singkat tentang tanaman",
-          "compatibility_score": 85,
-          "reasons": "Analisis kompatibilitas dengan parameter tanah yang diberikan",
-          "care_tips": "Tips perawatan khusus untuk tanaman ini dalam kondisi tanah Anda",
-          
+          "compatibility_score": 0-100,
+          "reasons": "Mengapa tanaman ini cocok untuk parameter tanah yang diberikan",
+          "care_tips": "Tips perawatan dasar untuk tanaman ini",
+
         }
       ]
     }
-    Berikan 2 tanaman lain sejenis yang memiliki compatibility score lebih baik
-    Pastikan untuk menghasilkan respons JSON yang valid.
+    Yang harus disertakan:
+      1. Analisis mendalam tentang kecocokan $plantName
+      2. 5 tanaman alternatif sejenis dengan score lebih baik
+      3. Alasan spesifik untuk setiap rekomendasi
+      4. Tips perawatan khusus untuk kondisi tanah ini
+
+      Tanaman alternatif harus:
+      - Memiliki jenis yang sama (pertanian/perkebunan)
+      - Lebih cocok dengan parameter tanah ini
+      - Cocok untuk iklim Indonesia
     ''';
 
       // Prepare the API request
@@ -119,7 +142,7 @@ class OpenRouterService {
         body: jsonEncode({
           'model': 'deepseek/deepseek-chat-v3-0324:free',
           'messages': [
-            {'role': 'system', 'content': 'You are a plant and agriculture expert. Always respond with a valid JSON structure.'},
+            {'role': 'system', 'content': 'You are a plant and agriculture expert.'},
             {'role': 'user', 'content': prompt}
           ],
           'temperature': 0.7,

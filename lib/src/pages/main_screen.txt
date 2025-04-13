@@ -1,205 +1,180 @@
-import 'package:flutter/material.dart';
-// import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:login_ui_demo/src/pages/sign_in_1.dart';
-import 'package:login_ui_demo/src/pages/sign_in_2.dart';
-import 'package:login_ui_demo/src/pages/sign_in_3.dart';
-import 'package:login_ui_demo/src/pages/sign_in_4.dart';
-import 'package:login_ui_demo/src/pages/login_page.dart';
-import 'package:login_ui_demo/src/pages/sign_in_6.dart';
-import 'package:login_ui_demo/src/pages/sign_in_7.dart';
-import 'package:login_ui_demo/src/pages/sign_in_8.dart';
-import 'package:login_ui_demo/src/pages/sign_in_9.dart';
-import 'package:login_ui_demo/src/pages/sign_in_10.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-class MainScreen extends StatelessWidget {
-  const MainScreen({Key? key}) : super(key: key);
+class OpenRouterService {
+  final String apiKey;
+  final String apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ScrollConfiguration(
-          behavior: ScrollConfiguration.of(context)
-              .copyWith(scrollbars: false), //to hide scrollbar
-          child: ListView(
-            children: [
-              logo(100, 100),
-              const SizedBox(
-                height: 16,
-              ),
-              richText(18),
-              buildButton(
-                'Design 1',
-                context,
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SignInOne(),
-                  ),
-                ),
-              ),
-              buildButton(
-                'Design 2',
-                context,
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SignInTwo(),
-                  ),
-                ),
-              ),
-              buildButton(
-                'Design 3',
-                context,
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SignInThree(),
-                  ),
-                ),
-              ),
-              buildButton(
-                'Design 4',
-                context,
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SignInFour(),
-                  ),
-                ),
-              ),
-              buildButton(
-                'Design 5',
-                context,
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SignInFive(),
-                  ),
-                ),
-              ),
-              buildButton(
-                'Design 6',
-                context,
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SignInSix(),
-                  ),
-                ),
-              ),
-              buildButton(
-                'Design 7',
-                context,
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SignInSeven(),
-                  ),
-                ),
-              ),
-              buildButton(
-                'Design 8',
-                context,
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SignInEight(),
-                  ),
-                ),
-              ),
-              buildButton(
-                'Design 9',
-                context,
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SignInNine(),
-                  ),
-                ),
-              ),
-              buildButton(
-                'Design 10',
-                context,
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SignInTen(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  OpenRouterService({required this.apiKey});
+
+  Future<Map<String, dynamic>> getPlantRecommendations(Map<String, dynamic> soilData) async {
+    try {
+      // Existing implementation remains the same
+      String soilDataString = soilData.entries
+          .map((entry) => '${entry.key}: ${entry.value.toStringAsFixed(2)}')
+          .join(', ');
+
+      String prompt = '''
+      Berdasarkan parameter tanah berikut, rekomendasikan tanaman yang paling cocok dan dapat tumbuh dengan baik:
+      $soilDataString
+      Pastikan tanaman tersebut cocok untuk lahan pasca tambang dan iklim indonesia.
+      Berikan respons JSON dengan struktur berikut:
+      {
+        "recommendations": [
+          {
+            "plant_name": "Nama Tanaman",
+            "description": "Deskripsi singkat tentang tanaman",
+            "compatibility_score": 0-100,
+            "reasons": "Mengapa tanaman ini cocok untuk parameter tanah yang diberikan",
+            "care_tips": "Tips perawatan dasar untuk tanaman ini"
+          }
+        ]
+      }
+      Berikan setidaknya 10 rekomendasi tanaman yang baik untuk menjadi lahan pertanian (seperti tanaman sayuran dan tanaman pokok) dan perkebunan (utamakan tanaman industri seperti sawit,kelapa, buah-buahan).
+      ''';
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+          'HTTP-Referer': '',
+          'X-Title': '',
+        },
+        body: jsonEncode({
+          'model': 'deepseek/deepseek-chat-v3-0324:free',
+          //'model': 'deepseek/deepseek-chat-v3-0324:free',
+
+          'messages': [
+            {'role': 'system', 'content': 'You are a plant and agriculture expert.'},
+            {'role': 'user', 'content': prompt}
+          ],
+          'temperature': 0.7,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Raw API Response: ${response.body}');
+        final jsonResponse = jsonDecode(response.body);
+        final content = jsonResponse['choices'][0]['message']['content'];
+
+        final jsonMatch = RegExp(r'{[\s\S]*}').firstMatch(content);
+        if (jsonMatch != null) {
+          final jsonContent = jsonMatch.group(0);
+          return jsonDecode(jsonContent!);
+        } else {
+          throw Exception('Gagal mendapatkan data rekomendasi. Silakan coba lagi.');
+        }
+      } else {
+        throw Exception('API request failed: ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      print('Error getting plant recommendations: $e');
+      throw Exception('Kami tidak dapat memberikan rekomendasi tanaman saat ini. Silakan coba lagi nanti. $e');
+    }
   }
 
- Widget logo(double height_, double width_) {
-  return Image.asset(
-    'assets/coco.png',  // Ubah dari SVG ke PNG
-    height: height_,
-    width: width_,
-    fit: BoxFit.contain,  // Sesuaikan dengan kebutuhan
-  );
-}
+  Future<Map<String, dynamic>> getSpecificPlantRecommendation(
+      String plantName,
+      Map<String, dynamic> soilData,
+      ) async {
+    try {
+      // Prepare the soil data for the prompt
+      String soilDataString = soilData.entries
+          .map((entry) => '${entry.key}: ${entry.value.toStringAsFixed(2)}')
+          .join(', ');
 
-  Widget richText(double fontSize) {
-    return Text.rich(
-      TextSpan(
-        style: GoogleFonts.inter(
-          fontSize: fontSize,
-          color: const Color(0xFF21899C),
-          letterSpacing: 3,
-          height: 1.03,
-        ),
-        children: const [
-          TextSpan(
-            text: 'LOGIN ',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          TextSpan(
-            text: 'PAGES \nUI ',
-            style: TextStyle(
-              color: Color(0xFFFE9879),
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          TextSpan(
-            text: 'KIT',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-      textAlign: TextAlign.center,
-    );
-  }
+      // Create the prompt
+      String prompt = '''
+    Saya ingin menanam $plantName. Berdasarkan parameter tanah berikut, rekomendasikan tanaman yang paling cocok dan dapat tumbuh dengan baik:
+    $soilDataString
 
-  Widget buildButton(String txt, BuildContext context, VoidCallback onTap) {
-    final size = MediaQuery.of(context).size;
-    return Padding(
-      padding: const EdgeInsets.only(top: 12.0),
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          alignment: Alignment.center,
-          height: size.height / 12,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15.0),
-            border: Border.all(
-              width: 1.0,
-              color: const Color(0xFF21899C),
-            ),
-          ),
-          child: Text(
-            txt,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontSize: 16.0,
-              color: const Color(0xFF21899C),
-              fontWeight: FontWeight.w500,
-              height: 1.5,
-            ),
-          ),
-        ),
-      ),
-    );
+    Bagaimana kompatibilitas tanaman ini dengan kondisi tanah saya?
+    Pastikan tanaman tersebut cocok untuk lahan pasca tambang dan iklim indonesia.
+
+    Berikan respons JSON dengan struktur berikut:
+    {
+      "recommendations": [
+        {
+          "plant_name": "$plantName",
+          "description": "Deskripsi singkat tentang tanaman",
+          "compatibility_score": 0-100,
+          "reasons": "Mengapa tanaman ini cocok untuk parameter tanah yang diberikan",
+          "care_tips": "Tips perawatan dasar untuk tanaman ini",
+
+        }
+      ]
+    }
+    Berikan 5 tanaman lain sejenis yang baik untuk menjadi lahan pertanian (seperti tanaman sayuran dan tanaman pokok) dan perkebunan (utamakan tanaman industri seperti sawit,kelapa, buah-buahan) dengan compatibility score lebih baik.
+    Pastikan untuk menghasilkan respons JSON yang valid.
+    ''';
+
+      // Prepare the API request
+      // "image_url": "URL gambar tanaman (opsional)"
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+          'HTTP-Referer': '',
+          'X-Title': '',
+        },
+        body: jsonEncode({
+          'model': 'deepseek/deepseek-chat-v3-0324:free',
+          'messages': [
+            {'role': 'system', 'content': 'You are a plant and agriculture expert.'},
+            {'role': 'user', 'content': prompt}
+          ],
+          'temperature': 0.7,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        final content = jsonResponse['choices'][0]['message']['content'];
+
+        // Print the raw content for debugging
+        print('Raw Specific Plant Recommendation: $content');
+
+        // More robust JSON extraction
+        final jsonPatterns = [
+          r'```json\s*(\{[\s\S]*?\})\s*```',  // Markdown code block
+          r'\{[^{}]*"recommendations":[^{}]*\}',  // JSON-like structure
+          r'(\{(?:[^{}]|(?R))*\})',  // Nested JSON
+        ];
+
+        for (var pattern in jsonPatterns) {
+          final jsonMatch = RegExp(pattern, multiLine: true, dotAll: true).firstMatch(content);
+
+          if (jsonMatch != null) {
+            try {
+              // Try extracting and parsing JSON
+              final jsonContent = jsonMatch.group(1) ?? jsonMatch.group(0);
+              if (jsonContent != null) {
+                // Explicitly convert to Map<String, dynamic>
+                final parsedJson = Map<String, dynamic>.from(jsonDecode(jsonContent));
+
+                // Validate the parsed JSON structure
+                if (parsedJson.containsKey('recommendations') &&
+                    parsedJson['recommendations'] is List) {
+                  return parsedJson;
+                }
+              }
+            } catch (parseError) {
+              print('JSON Parsing Attempt Failed: $parseError');
+              continue;  // Try next pattern
+            }
+          }
+        }
+
+        // If no valid JSON found
+        throw Exception('Tidak dapat menemukan struktur JSON yang valid dalam respons.');
+      } else {
+        throw Exception('Permintaan API gagal: ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      print('Error mendapatkan analisis tanaman: $e');
+      throw Exception('Kami tidak dapat menganalisis tanaman saat ini. Silakan coba lagi nanti. $e');
+    }
   }
 }

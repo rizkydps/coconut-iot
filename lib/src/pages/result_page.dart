@@ -544,7 +544,7 @@ class _ResultPageState extends State<ResultPage> {
                       borderSide: BorderSide.none,
                     ),
                     suffixIcon: IconButton(
-                      icon: const Icon(Icons.search, color: Colors.blue),
+                      icon: const Icon(Icons.search, color: Colors.green),
                       onPressed: () async {
                         if (_searchController.text.trim().isEmpty) return;
 

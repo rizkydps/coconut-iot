@@ -3,9 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: '273530551047-ck2mc9psc6epggnso65thvadqi6k18jr.apps.googleusercontent.com', // Ganti dengan Client ID Anda
-  );
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
   // Sign in with email and password
   Future<UserCredential?> signInWithEmailAndPassword(
       String email, String password) async {

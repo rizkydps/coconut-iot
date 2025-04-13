@@ -485,45 +485,59 @@ class _HomePageState extends State<HomePage> {
   Future<void> _fetchDeviceStatus() async {
     try {
       final response = await http.get(
-        Uri.parse('$_tbApiUrl/api/device/$_deviceId'),
+        Uri.parse('$_tbApiUrl/api/plugins/telemetry/DEVICE/$_deviceId/values/attributes/SERVER_SCOPE?keys=active'),
         headers: {
           'Content-Type': 'application/json',
           'X-Authorization': 'Bearer $_accessToken',
         },
       );
 
+      print('Raw device status response: ${response.body}');
+
       if (response.statusCode == 200) {
-        final deviceData = json.decode(response.body);
+        final List<dynamic> attributesData = json.decode(response.body);
+        print('Parsed attributes data: $attributesData');
 
-        // Check the device's actual status
-        bool isDeviceActive = deviceData['additionalInfo']['active'] ?? false;
+        // Cari atribut dengan key "active" dalam array response
+        if (attributesData.isNotEmpty) {
+          for (var attribute in attributesData) {
+            if (attribute is Map && attribute['key'] == 'active') {
+              // Dapatkan nilai dari atribut active
+              var activeValue = attribute['value'];
 
-        setState(() {
-          _deviceStatus = isDeviceActive;
-        });
+              // Konversi ke boolean
+              bool isActive = activeValue == true || activeValue == 'true';
+
+              print('Status aktif perangkat: $isActive');
+
+              setState(() {
+                _deviceStatus = isActive;
+              });
+
+              break; // Keluar dari loop setelah menemukan atribut active
+            }
+          }
+        } else {
+          print('Tidak ada data atribut yang diterima');
+        }
+      } else {
+        print('Gagal mendapatkan status perangkat: ${response.statusCode}');
       }
-      else {
-        print('Failed to fetch device status: ${response.statusCode}');
-      }
-    }
-    catch (e) {
-      print('Error fetching device status: $e');
+    } catch (e) {
+      print('Error saat mengambil status perangkat: $e');
     }
   }
 
   Future<void> _updateDeviceStatus(bool status) async {
     try {
       final response = await http.post(
-        Uri.parse('$_tbApiUrl/api/device/$_deviceId/credentials'),
+        Uri.parse('$_tbApiUrl/api/plugins/telemetry/DEVICE/$_deviceId/SERVER_SCOPE'),
         headers: {
           'Content-Type': 'application/json',
           'X-Authorization': 'Bearer $_accessToken',
         },
         body: json.encode({
-          'deviceId': _deviceId,
-          'additionalInfo': {
-            'active': status
-          }
+          'active': status
         }),
       );
 
@@ -541,23 +555,11 @@ class _HomePageState extends State<HomePage> {
         );
       } else {
         print('Failed to update device status: ${response.statusCode}');
-        Fluttertoast.showToast(
-          msg: "Failed to update device status",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-        );
+        // Tampilkan pesan toast error
       }
     } catch (e) {
       print('Error updating device status: $e');
-      Fluttertoast.showToast(
-        msg: "Error updating device status",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-      );
+      // Tampilkan pesan toast error
     }
   }
 
@@ -658,14 +660,16 @@ class _HomePageState extends State<HomePage> {
                                 color: Colors.white,
                               ),
                             ),
-                            Switch(
-                              value: _deviceStatus,
-                              onChanged: (value) {
-                                _updateDeviceStatus(value); // Call method to update device status
-                              },
-                              activeColor: Colors.green,
-                              inactiveThumbColor: Colors.red,
-                            ),
+                            Opacity(
+                              opacity: 1.0, // Opacity penuh agar warna terlihat jelas
+                              child: Switch(
+                                value: _deviceStatus,
+                                onChanged: null, // Ini membuat switch tidak bisa diinteraksi
+                                activeColor: Colors.green, // Warna saat active
+                                inactiveThumbColor: Colors.red, // Warna thumb saat inactive
+                                inactiveTrackColor: Colors.red.withOpacity(0.5), // Warna track saat inactive
+                              ),
+                            )
                           ],
                         ),
                         const Divider(color: Colors.grey),
@@ -825,11 +829,33 @@ class _HomePageState extends State<HomePage> {
                                 Icon(icon, color: color, size: 24),
                               ],
                             ),
-                            const SizedBox(height: 8),
-                            Text(
+                            const SizedBox(height: 6),
+                            // Modifikasi untuk mengatasi overflow pada EC
+                            key == 'EC'
+                                ? Column(
+                              children: [
+                                Text(
+                                  '${value.toStringAsFixed(2)}',
+                                  style: GoogleFonts.robotoMono(
+                                    fontSize: 20, // Ukuran font sedikit lebih kecil untuk EC
+                                    fontWeight: FontWeight.bold,
+                                    color: color,
+                                  ),
+                                ),
+                                Text(
+                                  unit, // Menampilkan unit pada baris terpisah
+                                  style: GoogleFonts.robotoMono(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: color,
+                                  ),
+                                ),
+                              ],
+                            )
+                            : Text(
                               '${value.toStringAsFixed(2)}$unit',
                               style: GoogleFonts.robotoMono(
-                                fontSize: 24,
+                                fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 color: color,
                               ),
