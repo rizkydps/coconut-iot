@@ -977,13 +977,15 @@ Future<void> _getPlantRecommendations(BuildContext context) async {
     // Find the MainPage state
     final mainPageState = context.findAncestorStateOfType<MainPageState>();
 
-    // If inside MainPage, update the ResultPage with loading state
+    // If inside MainPage, update both pages with loading state
     if (mainPageState != null) {
       mainPageState.updateResultsPage(
         recommendations: [],
         soilParameters: _averageData,
         isLoading: true,
+        isChiliAnalysisLoading: true, // Also set loading state for chili analysis
         isButtonClicked: true,
+        chiliAnalysisData: {}, // Reset chili data when reloading
       );
     }
 
@@ -1002,14 +1004,18 @@ Future<void> _getPlantRecommendations(BuildContext context) async {
     // Sort recommendations by compatibility score (highest first)
     recommendations.sort((a, b) => b.compatibilityScore.compareTo(a.compatibilityScore));
 
-    // Update the ResultPage with the actual results
+    // Update both pages with the actual results
     if (mainPageState != null) {
       mainPageState.updateResultsPage(
         recommendations: recommendations,
         soilParameters: _averageData,
         isLoading: false,
+        isChiliAnalysisLoading: true, // Still loading chili data
         isButtonClicked: true,
       );
+      
+      // Trigger chili data fetch (will happen in the background)
+      mainPageState.fetchChiliData(); 
       
       // After data is loaded, automatically navigate to the ResultPage
       mainPageState.navigateToResultPage();
@@ -1022,14 +1028,16 @@ Future<void> _getPlantRecommendations(BuildContext context) async {
       Navigator.of(context).pop();
     }
 
-    // Show error on the ResultPage
+    // Show error on both pages
     final mainPageState = context.findAncestorStateOfType<MainPageState>();
     if (mainPageState != null) {
       mainPageState.updateResultsPage(
         recommendations: [],
         soilParameters: _averageData,
         errorMessage: 'Failed to get plant recommendations: $e',
+        chiliAnalysisError: 'Failed to get chili analysis: $e',
         isLoading: false,
+        isChiliAnalysisLoading: false,
         isButtonClicked: true,
       );
       
