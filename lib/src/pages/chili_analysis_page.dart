@@ -404,7 +404,7 @@ class _ChiliAnalysisPageState extends State<ChiliAnalysisPage>
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Analisis Mendalam Tanaman Cabai',
+                  'Analisis Tanaman Cabai',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

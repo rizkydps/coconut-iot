@@ -590,33 +590,33 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         )
-            : _errorMessage.isNotEmpty
-            ? Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                color: Colors.red,
-                size: 60,
-              ),
-              SizedBox(height: 20),
-              Text(
-                _errorMessage,
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _loginAndFetchData,
-                child: Text('Retry'),
-              )
-            ],
-          ),
-        )
+        //     : _errorMessage.isNotEmpty
+        //     ? Center(
+        //   child: Column(
+        //     mainAxisAlignment: MainAxisAlignment.center,
+        //     children: [
+        //       Icon(
+        //         Icons.error_outline,
+        //         color: Colors.red,
+        //         size: 60,
+        //       ),
+        //       SizedBox(height: 20),
+        //       Text(
+        //         _errorMessage,
+        //         style: GoogleFonts.poppins(
+        //           color: Colors.white,
+        //           fontSize: 16,
+        //         ),
+        //         textAlign: TextAlign.center,
+        //       ),
+        //       SizedBox(height: 20),
+        //       ElevatedButton(
+        //         onPressed: _loginAndFetchData,
+        //         child: Text('Retry'),
+        //       )
+        //     ],
+        //   ),
+        // )
             : SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Padding(

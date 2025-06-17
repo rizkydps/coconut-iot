@@ -350,7 +350,7 @@ void updateResultsPage({
               _buildNavItem(0, Icons.home, 'Home'),
               _buildNavItem(1, Icons.analytics, 'Analisis'),
               _buildNavItem(2, Icons.assignment, 'Rekomendasi'),
-              _buildNavItem(3, Icons.local_fire_department, 'Analisis Cabai'), 
+              _buildNavItem(3, Icons.local_fire_department, 'Cabai'), 
             ],
           ),
         ),
